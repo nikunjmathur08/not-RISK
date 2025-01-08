@@ -16,7 +16,6 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-
 const applianceSchema = zod.object({
   name: zod.string(),
   purchaseDate: zod.string()
