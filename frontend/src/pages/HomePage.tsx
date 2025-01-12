@@ -7,7 +7,7 @@ function HomePage() {
     <div>
       <div className="mx-4">
         <Navbar />
-        <p className="pl-3 text-xl font-bold">your appliances</p>
+        <p className="pl-4 text-xl font-bold">your appliances</p>
         <div className="mt-10 ml-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-8">
           <ApplianceCard companyName="Haier" applianceName="Haier Refrigerator" applianceImg="/temp/Refrigerator.jpg" />
           <ApplianceCard companyName="Haier" applianceName="Haier Refrigerator" applianceImg="/temp/Refrigerator.jpg" />
