@@ -72,7 +72,7 @@ function AddProduct() {
               id="productName"
               name="productName"
               placeholder="enter product name"
-              className="mt-3 w-full border-2 rounded bg-gray-100 p-2"
+              className="mt-3 w-full border-2 rounded bg-gray-100 p-2 focus:outline-none focus:ring-2 focus:ring-violet-700"
             />
           </div>
 
@@ -82,14 +82,14 @@ function AddProduct() {
               htmlFor="purchaseDate"
               className="block text-sm font-medium"
             >
-              Purchase Month
+              purchase month
             </label>
             <div className='mt-2 flex space-x-4'>
               <select
                 id='monthPicker'
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
-                className='mt-3 w-full border-2 rounded bg-gray-100 p-2'
+                className='mt-3 w-full border-2 text-gray-700 rounded bg-gray-100 p-2 focus:outline-none focus:ring-2 focus:ring-violet-700'
               >
                 <option value="">select month</option>
                 {months.map((month, index) => (
@@ -102,43 +102,50 @@ function AddProduct() {
                 id="yearPicker"
                 value={selectedYear}
                 onChange={(e) => setSelectedYear(e.target.value)}
-                className="mt-3 w-full border-2 rounded bg-gray-100 p-2"
+                className="mt-3 w-full border-2 text-gray-700 rounded bg-gray-100 p-2 focus:outline-none focus:ring-2 focus:ring-violet-700"
               >
-
+                <option value="">select year</option>
+                {years.map((year, index) => (
+                  <option key={index} value={year}>
+                    {year}
+                  </option>
+                ))}
               </select>
             </div>
-            <input
-              type="month"
-              id="purchaseDate"
-              name="purchaseDate"
-              className="mt-3 w-full border-2 rounded bg-gray-100 p-2"
-            />
           </div>
 
           {/* Product Image */}
           <div>
-            <label
-              htmlFor="productImage"
-              className="block text-sm font-medium"
-            >
-              Product Image
-            </label>
-            <input
-              type="file"
-              id="productImage"
-              name="productImage"
-              accept="image/*"
-              className="mt-3 w-full border-2 rounded bg-gray-100 p-2"
-            />
+              <label
+                htmlFor="productImage"
+                className="block text-sm font-medium text-gray-700"
+              >
+                product image
+              </label>
+              <div className="mt-2">
+                <label
+                  htmlFor="productImage"
+                  className="block w-full cursor-pointer py-2 px-4 border border-gray-300 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  choose file
+                </label>
+                <input
+                  type="file"
+                  id="productImage"
+                  name="productImage"
+                  accept="image/*"
+                  className="sr-only"
+                />
+              </div>
           </div>
 
           {/* Submit Button */}
           <div className="flex justify-center">
             <button
               type="submit"
-              className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md text-lg font-semibold hover:bg-indigo-700 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              className="w-full bg-violet-700 text-white py-2 px-4 rounded-md text-lg font-semibold hover:bg-violet-800 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
-              Add Product
+              add product
             </button>
           </div>
         </form>
