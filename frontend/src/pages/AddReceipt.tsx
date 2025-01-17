@@ -79,7 +79,7 @@ function AddReceipt({ title }: AddReceiptProps) {
               <div className="mt-2">
                 <label
                   htmlFor="receiptFile"
-                  className="block w-full border-2 rounded bg-gray-100 p-2 cursor-pointer text-gray-700 focus:outline-none focus:ring-2 focus:ring-violet-700"
+                  className="block w-full border-2 rounded bg-gray-100 p-2 cursor-pointer text-gray-400 focus:outline-none focus:ring-2 focus:ring-violet-700"
                 >
                   {fileName || "choose file"}
                 </label>
