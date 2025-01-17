@@ -2,6 +2,7 @@
 import './App.css'
 import Sidebar from './components/Sidebar'
 import Appliance from './pages/Appliance'
+import ApplianceDetails from './pages/ApplianceDetails'
 import HomePage from './pages/HomePage'
 
 function App() {
@@ -10,7 +11,8 @@ function App() {
     <>
       {/* <Sidebar /> */}
       {/* <HomePage /> */}
-      <Appliance />
+      {/* <Appliance /> */}
+      <ApplianceDetails applianceName='Haier Refrigerator' purchaseDate='November 2024'/>
     </>
   )
 }

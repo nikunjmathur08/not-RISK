@@ -13,7 +13,7 @@ function Appliance() {
           <div className="max-w-64">
             <SearchBox />
           </div>
-          <p className="mt-4 text-xl font-bold">your appliances</p>
+          <p className="my-8 text-3xl font-semibold">your appliances</p>
           <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             <ApplianceCard companyName="Haier" applianceName="Haier Refrigerator" applianceImg="/temp/Refrigerator.jpg" />
             <ApplianceCard companyName="Haier" applianceName="Haier Refrigerator" applianceImg="/temp/Refrigerator.jpg" />
