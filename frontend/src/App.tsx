@@ -6,6 +6,7 @@ import AddReceipt from './pages/AddReceipt'
 import Appliance from './pages/Appliance'
 import ApplianceDetails from './pages/ApplianceDetails'
 import HomePage from './pages/HomePage'
+import SignInSignUp from './pages/SignInSignUp'
 
 function App() {
 
@@ -16,7 +17,8 @@ function App() {
       {/* <Appliance /> */}
       {/* <ApplianceDetails applianceName='Haier Refrigerator' purchaseDate='November 2024'/> */}
       {/* <AddProduct /> */}
-      <AddReceipt title="Haier Refrigerator"/>
+      {/* <AddReceipt title="Haier Refrigerator"/> */}
+      <SignInSignUp />
     </>
   )
 }
