@@ -15,7 +15,7 @@ function App() {
       {/* <Sidebar /> */}
       {/* <HomePage /> */}
       {/* <Appliance /> */}
-      {/* <ApplianceDetails applianceName='Haier Refrigerator' purchaseDate='November 2024'/> */}
+      {/* <ApplianceDetails applianceName='Haier Refrigerator' purchaseDate='November 2024' modelNumber='21MAB204T'/> */}
       {/* <AddProduct /> */}
       {/* <AddReceipt title="Haier Refrigerator"/> */}
       <SignInSignUp />
