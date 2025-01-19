@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 function AddProduct() {
   const [selectedMonth, setSelectedMonth] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
+  const [selectedDate, setSelectedDate] = useState("");
+  const [fileName, setFileName] = useState("choose file");
 
   const months = [
     "January",
@@ -19,7 +21,13 @@ function AddProduct() {
     "December",
   ];
 
-  const years = Array.from({ length: 20 }, (_, i) => new Date().getFullYear() - i);
+  const years = Array.from({ length: 30 }, (_, i) => new Date().getFullYear() - i);
+  const dates = Array.from({ length: 31 }, (_, i) => i + 1);
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files ? event.target.files[0] : null;
+    setFileName(file ? file.name : "choose file");
+  };
 
   return (
     <div className="my-8 mx-4">
@@ -82,14 +90,27 @@ function AddProduct() {
               htmlFor="purchaseDate"
               className="block text-sm font-medium"
             >
-              purchase month
+              purchase date
             </label>
             <div className='mt-2 flex space-x-4'>
+              <select
+                id='datePicker'
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className='mt-3 w-full border-2 text-gray-400 rounded bg-gray-100 p-2 focus:outline-none focus:ring-2 focus:ring-violet-700'
+              >
+                <option value="">select date</option>
+                {dates.map((date, index) => (
+                  <option key={index} value={date}>
+                    {date}
+                  </option>
+                ))}
+              </select>
               <select
                 id='monthPicker'
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
-                className='mt-3 w-full border-2 text-gray-700 rounded bg-gray-100 p-2 focus:outline-none focus:ring-2 focus:ring-violet-700'
+                className='mt-3 w-full border-2 text-gray-400 rounded bg-gray-100 p-2 focus:outline-none focus:ring-2 focus:ring-violet-700'
               >
                 <option value="">select month</option>
                 {months.map((month, index) => (
@@ -102,7 +123,7 @@ function AddProduct() {
                 id="yearPicker"
                 value={selectedYear}
                 onChange={(e) => setSelectedYear(e.target.value)}
-                className="mt-3 w-full border-2 text-gray-700 rounded bg-gray-100 p-2 focus:outline-none focus:ring-2 focus:ring-violet-700"
+                className="mt-3 w-full border-2 text-gray-400 rounded bg-gray-100 p-2 focus:outline-none focus:ring-2 focus:ring-violet-700"
               >
                 <option value="">select year</option>
                 {years.map((year, index) => (
@@ -114,36 +135,53 @@ function AddProduct() {
             </div>
           </div>
 
+          <div>
+            <label
+              htmlFor="modelNumber"
+              className="block text-sm font-medium"
+            >
+              model number
+            </label>
+            <input
+              type="text"
+              id="modelNumber"
+              name="modelNumber"
+              placeholder="enter model number"
+              className="mt-3 w-full border-2 rounded bg-gray-100 p-2 focus:outline-none focus:ring-2 focus:ring-violet-700"
+            />
+          </div>
+
           {/* Product Image */}
           <div>
+            <label
+              htmlFor="productImage"
+              className="block text-sm font-medium"
+            >
+              product image
+            </label>
+            <div className="mt-2">
               <label
                 htmlFor="productImage"
-                className="block text-sm font-medium"
+                className="block w-full cursor-pointer py-2 px-4 border border-gray-300 rounded-md bg-gray-100 text-gray-400 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-violet-700"
               >
-                product image
+                {fileName}
               </label>
-              <div className="mt-2">
-                <label
-                  htmlFor="productImage"
-                  className="block w-full cursor-pointer py-2 px-4 border border-gray-300 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  choose file
-                </label>
-                <input
-                  type="file"
-                  id="productImage"
-                  name="productImage"
-                  accept="image/*"
-                  className="sr-only"
-                />
-              </div>
+              <input
+                type="file"
+                id="productImage"
+                name="productImage"
+                accept="image/*"
+                className="sr-only"
+                onChange={handleFileChange}
+              />
+            </div>
           </div>
 
           {/* Submit Button */}
           <div className="flex justify-center">
             <button
               type="submit"
-              className="w-full bg-violet-700 text-white py-2 px-4 rounded-md text-lg font-semibold hover:bg-violet-800 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              className="w-full bg-violet-700 text-white py-2 px-4 rounded-md text-lg font-semibold hover:bg-violet-800 focus:ring-2 focus:ring-offset-2 focus:ring-violet-700"
             >
               add product
             </button>
