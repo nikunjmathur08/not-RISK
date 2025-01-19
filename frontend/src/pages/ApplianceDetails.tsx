@@ -3,9 +3,10 @@ import Receipt from "../components/Receipt"
 type ApplianceProps = {
   applianceName: string,
   purchaseDate: string,
+  modelNumber: string,
 };
 
-function ApplianceDetails( {applianceName, purchaseDate} : ApplianceProps ) {
+function ApplianceDetails( {applianceName, purchaseDate, modelNumber} : ApplianceProps ) {
   return (
     <div className="mx-6 my-8">
       <div className="flex">
@@ -38,9 +39,13 @@ function ApplianceDetails( {applianceName, purchaseDate} : ApplianceProps ) {
         <img src="/temp/Refrigerator.jpg" className="h-96 w-96 mx-44 my-20 object-cover"></img>
         <div>
           <p className="text-5xl mt-36 font-semibold">{applianceName}</p>
-          <div className="flex my-8 text-xl">
+          <div className="flex mt-8 my-2 text-xl">
             <p className="text-gray-700 mr-1">purchase date -</p>
             <p>{purchaseDate}</p>
+          </div>
+          <div className="flex mb-8 mt-2 text-xl">
+            <p className="text-gray-700 mr-1">model number -</p>
+            <p>{modelNumber}</p>
           </div>
           <p className="text-xl mb-2">your receipts</p>
           <Receipt name="original" />
