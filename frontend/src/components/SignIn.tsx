@@ -1,4 +1,8 @@
+import { useNavigate } from "react-router-dom";
+
 function SignIn() {
+  const navigate = useNavigate();
+
   return (
     <div className="flex h-screen">
       {/* Left Section */}
@@ -87,7 +91,7 @@ function SignIn() {
           <p className="text-center mb-6">
             share your details to track your invoices and <br/> warranty status effortlessly.
           </p>
-          <button className="bg-transparent border border-white rounded px-10 py-2 text-white text-lg hover:bg-white hover:text-black">
+          <button onClick={() => navigate("/signup")} className="bg-transparent border border-white rounded px-10 py-2 text-white text-lg hover:bg-white hover:text-black">
             sign up
           </button>
         </div>

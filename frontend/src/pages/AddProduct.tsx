@@ -21,7 +21,7 @@ function AddProduct() {
     "December",
   ];
 
-  const years = Array.from({ length: 30 }, (_, i) => new Date().getFullYear() - i);
+  const years = Array.from({ length: 25 }, (_, i) => new Date().getFullYear() - i);
   const dates = Array.from({ length: 31 }, (_, i) => i + 1);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
