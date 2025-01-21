@@ -1,8 +1,15 @@
+import { useNavigate } from 'react-router-dom';
 import { ApplianceCardProps } from '../types/Appliance'
 
-function ApplianceCard({ companyName, applianceName, applianceImg }: ApplianceCardProps) {
+function ApplianceCard({ id, companyName, applianceName, applianceImg }: ApplianceCardProps) {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    navigate(`/appliances/${id}`);
+  }
+
   return (
-    <div className='bg-slate-50 drop-shadow-xl rounded-lg flex flex-col h-full p-4 border border-slate-200 cursor-pointer'>
+    <div onClick={handleClick} className='bg-slate-50 drop-shadow-xl rounded-lg flex flex-col h-full p-4 border border-slate-200 cursor-pointer'>
       <p className='text-violet-700 text-left'>{companyName.toUpperCase()}</p>
       <div className="flex-1 flex items-center justify-center py-4">
         <img 

@@ -1,12 +1,43 @@
+import { useParams } from "react-router-dom";
 import Receipt from "../components/Receipt"
 
 type ApplianceProps = {
-  applianceName: string,
-  purchaseDate: string,
-  modelNumber: string,
+  id: string;
+  applianceName: string;
+  purchaseDate: string;
+  modelNumber: string;
+  image: string;
 };
 
-function ApplianceDetails( {applianceName, purchaseDate, modelNumber} : ApplianceProps ) {
+const appliances: ApplianceProps[] = [
+  {
+    id: "1",
+    applianceName: "Haier Refrigerator",
+    purchaseDate: "2023-01-15",
+    modelNumber: "UP14CY",
+    image: "/temp/Refrigerator.jpg",
+  },
+  {
+    id: "2",
+    applianceName: "MacBook Air",
+    purchaseDate: "2021-05-18",
+    modelNumber: "A2018",
+    image: "/temp/Mac.jpg",
+  },
+];
+
+function ApplianceDetails() {
+  const { id } = useParams<{ id: string }>();
+  const appliance = appliances.find((item) => item.id === id);
+
+  if (!appliance) {
+    return (
+      <p>appliance not found</p>
+    );
+  }
+
+  const { applianceName, purchaseDate, modelNumber, image } = appliance;
+
   return (
     <div className="mx-6 my-8">
       <div className="flex">
@@ -36,7 +67,7 @@ function ApplianceDetails( {applianceName, purchaseDate, modelNumber} : Applianc
         <p className="font-semibold text-xl">appliance details</p>
       </div>
       <div className="grid grid-cols-2">
-        <img src="/temp/Refrigerator.jpg" className="h-96 w-96 mx-44 my-20 object-cover"></img>
+        <img src={image} className="h-96 w-96 mx-44 my-20 object-cover"></img>
         <div>
           <p className="text-5xl mt-36 font-semibold">{applianceName}</p>
           <div className="flex mt-8 my-2 text-xl">
