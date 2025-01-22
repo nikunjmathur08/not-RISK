@@ -11,6 +11,7 @@ import SignInSignUp from './pages/SignInSignUp'
 import SignIn from './components/SignIn'
 import SignUp from './components/SignUp'
 import Error from './pages/Error'
+import Profile from './pages/Profile'
 
 function App() {
 
@@ -23,6 +24,7 @@ function App() {
         <Route path='/appliances' element={<Appliance />} />
         <Route path='/appliances/:id' element={<ApplianceDetails />} />
         <Route path='/error' element={<Error />} />
+        <Route path='/profile' element={<Profile />} />
       </Routes>
     </Router>
   )

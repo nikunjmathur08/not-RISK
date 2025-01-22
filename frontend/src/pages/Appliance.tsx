@@ -16,7 +16,7 @@ function Appliance() {
           <p className="my-8 text-3xl font-semibold">your appliances</p>
           <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             <ApplianceCard id="1" companyName="Haier" applianceName="Haier Refrigerator" applianceImg="/temp/Refrigerator.jpg" />
-            <ApplianceCard id="2" companyName="Haier" applianceName="Haier Refrigerator" applianceImg="/temp/Refrigerator.jpg" />
+            <ApplianceCard id="2" companyName="Apple" applianceName="MacBook Air" applianceImg="/temp/Mac.jpg" />
             <ApplianceCard id="3" companyName="Haier" applianceName="Haier Refrigerator" applianceImg="/temp/Refrigerator.jpg" />
             <ApplianceCard id="4" companyName="Haier" applianceName="Haier Refrigerator" applianceImg="/temp/Refrigerator.jpg" />
             <ApplianceCard id="5" companyName="Haier" applianceName="Haier Refrigerator" applianceImg="/temp/Refrigerator.jpg" />
