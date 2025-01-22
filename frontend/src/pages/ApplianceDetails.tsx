@@ -1,5 +1,6 @@
-import { useParams } from "react-router-dom";
-import Receipt from "../components/Receipt"
+import { useNavigate, useParams } from "react-router-dom";
+import Receipt from "../components/Receipt";
+import { useEffect, useState } from "react";
 
 type ApplianceProps = {
   id: string;
@@ -28,12 +29,20 @@ const appliances: ApplianceProps[] = [
 
 function ApplianceDetails() {
   const { id } = useParams<{ id: string }>();
-  const appliance = appliances.find((item) => item.id === id);
+  const navigate = useNavigate();
+  const [appliance, setAppliance] = useState<ApplianceProps | null>(null);
+
+  useEffect(() => {
+    const foundAppliance = appliances.find((item) => item.id === id);
+    if (!foundAppliance) {
+      navigate("/error", {replace: true});
+    } else {
+      setAppliance(foundAppliance);
+    }
+  }, [id, navigate]);
 
   if (!appliance) {
-    return (
-      <p>appliance not found</p>
-    );
+    return null;
   }
 
   const { applianceName, purchaseDate, modelNumber, image } = appliance;
@@ -67,7 +76,7 @@ function ApplianceDetails() {
         <p className="font-semibold text-xl">appliance details</p>
       </div>
       <div className="grid grid-cols-2">
-        <img src={image} className="h-96 w-96 mx-44 my-20 object-cover"></img>
+        <img src={image} className="h-96 w-96 mx-44 my-20 object-cover" alt={applianceName}></img>
         <div>
           <p className="text-5xl mt-36 font-semibold">{applianceName}</p>
           <div className="flex mt-8 my-2 text-xl">
@@ -89,7 +98,7 @@ function ApplianceDetails() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default ApplianceDetails
+export default ApplianceDetails;
