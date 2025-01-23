@@ -7,7 +7,6 @@ import AddReceipt from './pages/AddReceipt'
 import Appliance from './pages/Appliance'
 import ApplianceDetails from './pages/ApplianceDetails'
 import HomePage from './pages/HomePage'
-import SignInSignUp from './pages/SignInSignUp'
 import SignIn from './components/SignIn'
 import SignUp from './components/SignUp'
 import Error from './pages/Error'
@@ -25,6 +24,7 @@ function App() {
         <Route path='/appliances/:id' element={<ApplianceDetails />} />
         <Route path='/error' element={<Error />} />
         <Route path='/profile' element={<Profile />} />
+        <Route path='/add-product' element={<AddProduct />} />
       </Routes>
     </Router>
   )

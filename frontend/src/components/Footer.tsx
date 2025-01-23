@@ -1,8 +1,12 @@
+import { useNavigate } from "react-router-dom"
+
 function Footer() {
+  const navigate = useNavigate();
+
   return (
     <>
       <div className="bg-blue-900 pt-16 text-center">
-        <button className="bg-slate-50 rounded-lg py-4 px-6 mb-4 inline-block">add appliance</button>
+        <button onClick={() => {navigate("/add-product")}} className="bg-slate-50 rounded-lg py-4 px-6 mb-4 inline-block">add appliance</button>
         <div className="flex justify-center space-x-8 text-white font-light">
           <a>home</a>
           <a>about</a>
