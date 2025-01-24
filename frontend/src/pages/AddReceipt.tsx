@@ -1,19 +1,49 @@
 import { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
-type AddReceiptProps = {
-  title: string;
-};
-
-function AddReceipt({ title }: AddReceiptProps) {
+function AddReceipt() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [receiptName, setReceiptName] = useState("");
   const [fileName, setFileName] = useState<string | null>(null);
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const { productId, productName } = location.state || {};
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files.length > 0) {
-      setFileName(event.target.files[0].name);
-    } else {
-      setFileName(null);
+    const file = event.target.files?.[0] || null;
+    if (file) {
+      setReceiptFile(file);
+      setFileName(file.name);
     }
   };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const formData = new FormData();
+    formData.append('receiptName', receiptName);
+    formData.append('productId', productId);
+    if (receiptFile) {
+      formData.append('receiptFile', receiptFile);
+    }
+
+    try {
+      const response = await fetch('http://localhost:3001/api/receipts', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        navigate('/products'); // Navigate to products list or wherever appropriate
+      } else {
+        console.error('Failed to add receipt');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
+  const title = location.state?.productName || "";
 
   return (
     <div>
@@ -47,10 +77,10 @@ function AddReceipt({ title }: AddReceiptProps) {
         </div>
 
         <div className="flex justify-center ml-10 mt-24">
-          <p className="font-semibold text-2xl">{title}</p>
+          <p className="font-semibold text-3xl">{title}</p>
         </div>
         <div className="mt-16 max-w-5xl mx-auto">
-          <form className="space-y-6">
+          <form className="space-y-6" onSubmit={handleSubmit}>
             {/* Product Name */}
             <div>
               <label
@@ -64,6 +94,8 @@ function AddReceipt({ title }: AddReceiptProps) {
                 id="receiptName"
                 name="receiptName"
                 placeholder="enter receipt name"
+                value={receiptName}
+                onChange={(e) => setReceiptName(e.target.value)}
                 className="mt-3 w-full border-2 rounded bg-gray-100 p-2 focus:outline-none focus:ring-2 focus:ring-violet-700"
               />
             </div>

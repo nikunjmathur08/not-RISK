@@ -1,10 +1,15 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 function AddProduct() {
+  const navigate = useNavigate();
   const [selectedMonth, setSelectedMonth] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
+  const [productName, setProductName] = useState("");
   const [fileName, setFileName] = useState("choose file");
+  const [modelNumber, setModelNumber] = useState("");
+  const [productImage, setProductImage] = useState<File | null>(null);
 
   const months = [
     "January",
@@ -26,7 +31,39 @@ function AddProduct() {
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files ? event.target.files[0] : null;
-    setFileName(file ? file.name : "choose file");
+    if (file) {
+      setProductImage(file);
+      setFileName(file.name);
+    }
+  };
+
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const formData = new FormData();
+    formData.append('productName', productName);
+    formData.append('purchaseDate', `${selectedYear}-${selectedMonth}-${selectedDate}`);
+    formData.append('modelNumber', modelNumber);
+    if (productImage) {
+      formData.append('productImage', productImage);
+    }
+
+    try {
+      const response = await fetch('http://localhost:3001/api/products', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        navigate('/add-receipt', { state: { productId: result._id, productName } });
+      } else {
+        console.error('Failed to add product');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
   };
 
   return (
@@ -66,7 +103,7 @@ function AddProduct() {
 
       {/* Form Container */}
       <div className="mt-16 max-w-5xl mx-auto">
-        <form className="space-y-6">
+        <form className="space-y-6" onSubmit={handleSubmit}>
           {/* Product Name */}
           <div>
             <label
@@ -80,6 +117,8 @@ function AddProduct() {
               id="productName"
               name="productName"
               placeholder="enter product name"
+              value={productName}
+              onChange={(e) => setProductName(e.target.value)}
               className="mt-3 w-full border-2 rounded bg-gray-100 p-2 focus:outline-none focus:ring-2 focus:ring-violet-700"
             />
           </div>
@@ -147,6 +186,8 @@ function AddProduct() {
               id="modelNumber"
               name="modelNumber"
               placeholder="enter model number"
+              value={modelNumber}
+              onChange={(e) => setModelNumber(e.target.value)}
               className="mt-3 w-full border-2 rounded bg-gray-100 p-2 focus:outline-none focus:ring-2 focus:ring-violet-700"
             />
           </div>

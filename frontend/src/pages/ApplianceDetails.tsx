@@ -35,7 +35,7 @@ function ApplianceDetails() {
   useEffect(() => {
     const foundAppliance = appliances.find((item) => item.id === id);
     if (!foundAppliance) {
-      navigate("/error", {replace: true});
+      navigate("/error", { replace: true });
     } else {
       setAppliance(foundAppliance);
     }
@@ -92,7 +92,14 @@ function ApplianceDetails() {
           <Receipt name="insurance" />
           <Receipt name="service" />
           <div className="flex space-x-4 mt-8">
-            <button className="bg-neutral-950 px-4 py-4 text-xl rounded-lg text-white">add more receipts</button>
+            <button
+              onClick={() => navigate("/add-receipt", {
+                state: { productName: applianceName }
+              })}
+              className="bg-neutral-950 px-4 py-4 text-xl rounded-lg text-white"
+            >
+              add more receipts
+            </button>
             <button className="bg-neutral-950 px-4 py-4 text-xl rounded-lg text-white">delete product</button>
           </div>
         </div>

@@ -25,6 +25,7 @@ function App() {
         <Route path='/error' element={<Error />} />
         <Route path='/profile' element={<Profile />} />
         <Route path='/add-product' element={<AddProduct />} />
+        <Route path='/add-receipt' element={<AddReceipt />} />
       </Routes>
     </Router>
   )
