@@ -1,7 +1,7 @@
 const express = require("express");
 const multer = require("multer");
 const { Appliance } = require("../db");
-const { authMiddleware } = require("../middleware");
+const { authMiddleware } = require("../authMiddleware");
 const zod = require("zod");
 
 const router = express.Router();
@@ -14,7 +14,17 @@ const storage = multer.diskStorage({
     cb(null, `${Date.now()}-${file.originalname}`);
   },
 });
-const upload = multer({ storage });
+const upload = multer({ 
+  storage,
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+    if (!allowedTypes.includes(file.mimetype)) {
+      return cb(new Error('only JPEG, PNG and PDF files are allowed'), false);
+    }
+    cb(null, true);
+  },
+  limits: {fileSize: 5 * 1024 * 1024},
+ });
 
 const applianceSchema = zod.object({
   name: zod.string(),
@@ -30,6 +40,7 @@ router.post("/add", authMiddleware, upload.fields([
     if (!success) {
       return res.status(400).json({
         message: "Inavlid input data",
+        errors: error.errors,
       });
     }
 
@@ -78,6 +89,7 @@ router.put("/:id", authMiddleware, async (req, res) => {
     if (!success) {
       return res.status(400).json({
         message: "Invalid input data",
+        errors: error.errors,
       });
     }
 

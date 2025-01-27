@@ -39,7 +39,7 @@ const accountSchema = new mongoose.Schema({
   },
 });
 
-const applicanceSchema = new mongoose.Schema({
+const applianceSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
@@ -50,26 +50,38 @@ const applicanceSchema = new mongoose.Schema({
     require: true,
     trim: true
   },
+  modelNumber: {
+    type: String,
+    require: true,
+    trim: true
+  },
   purchaseDate: {
     type: Date,
     require: true
   },
-  originalReceipt: {
+  productImage: {
     type: String,
-    require: false
+    require: true
   },
-  insuranceReceipt: {
-    type: String,
-    require: false
-  },
-  additionReceipts: [{
-    type: String,
-    require: false
-  }]
+  receipts: [{
+    name: {
+      type: String,
+      require: true,
+      trim: true
+    },
+    file: {
+      type: String,
+      require: true
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
 });
 
 const User = new mongoose.model("User", userSchema)
 const Account = new mongoose.model("Account", accountSchema)
-const Appliance = new mongoose.model("Appliance", applicanceSchema)
+const Appliance = new mongoose.model("Appliance", applianceSchema)
 
 module.exports = { User, Account, Appliance }
