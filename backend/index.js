@@ -35,5 +35,4 @@ app.use((err, req, res, next) => {
 const mainRouter = require("./routes/index");
 
 app.use("/api/v1", mainRouter);
-console.log("Google Client ID: ", process.env.GOOGLE_CLIENT_ID);
 app.listen(3000);
