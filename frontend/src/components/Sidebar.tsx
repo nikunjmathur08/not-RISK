@@ -34,7 +34,7 @@ function Sidebar() {
           </svg>
           home
         </p>
-        <p className="flex items-center text-lg hover:bg-violet-600 hover:text-white active:bg-violet-700 active:text-white px-6 py-4 w-full rounded">
+        <p onClick={() => navigate("/appliances")} className="flex items-center text-lg hover:bg-violet-600 hover:text-white active:bg-violet-700 active:text-white px-6 py-4 w-full rounded">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="28"
