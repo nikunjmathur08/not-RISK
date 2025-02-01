@@ -1,51 +1,66 @@
 import { useNavigate, useParams } from "react-router-dom";
 import Receipt from "../components/Receipt";
 import { useEffect, useState } from "react";
+import { getApplianceDetails, deleteAppliance } from "../utils/api";
 
 type ApplianceProps = {
-  id: string;
-  applianceName: string;
+  _id: string;
+  name: string;
   purchaseDate: string;
   modelNumber: string;
-  image: string;
+  productImage: string;
+  receipts: Array<{
+    name: string;
+    file: string;
+  }>;
 };
-
-const appliances: ApplianceProps[] = [
-  {
-    id: "1",
-    applianceName: "Haier Refrigerator",
-    purchaseDate: "2023-01-15",
-    modelNumber: "UP14CY",
-    image: "/temp/Refrigerator.jpg",
-  },
-  {
-    id: "2",
-    applianceName: "MacBook Air",
-    purchaseDate: "2021-05-18",
-    modelNumber: "A2018",
-    image: "/temp/Mac.jpg",
-  },
-];
 
 function ApplianceDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [appliance, setAppliance] = useState<ApplianceProps | null>(null);
 
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
-    const foundAppliance = appliances.find((item) => item.id === id);
-    if (!foundAppliance) {
-      navigate("/error", { replace: true });
-    } else {
-      setAppliance(foundAppliance);
+    const fetchAppliance = async () => {
+      try {
+        setLoading(true);
+        const data = await getApplianceDetails(id!);
+        setAppliance(data.appliance);
+        setError(null);
+      } catch (err) {
+        setError("Failed to load appliance details");
+        navigate("/error", { replace: true });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchAppliance();
     }
   }, [id, navigate]);
 
-  if (!appliance) {
-    return null;
+  if (loading) {
+    return <div className="flex min-h-screen items-center justify-center">Loading...</div>;
   }
 
-  const { applianceName, purchaseDate, modelNumber, image } = appliance;
+  if (error || !appliance) {
+    return <div className="flex min-h-screen items-center justify-center text-red-500">{error || "Appliance not found"}</div>;
+  }
+
+  const handleDelete = async () => {
+    try {
+      await deleteAppliance(appliance._id);
+      navigate("/appliances", { replace: true });
+    } catch (err) {
+      setError("Failed to delete appliance");
+    }
+  };
+
+  const { name: applianceName, purchaseDate, modelNumber, productImage: image, receipts } = appliance;
 
   return (
     <div className="mx-6 my-8">
@@ -76,7 +91,11 @@ function ApplianceDetails() {
         <p className="font-semibold text-xl">appliance details</p>
       </div>
       <div className="grid grid-cols-2">
-        <img src={image} className="h-96 w-96 mx-44 my-20 object-cover" alt={applianceName}></img>
+        <img 
+          src={image ? (image.startsWith('http') ? image : `http://localhost:3000/api/files/${image}`) : ''} 
+          className="h-96 w-96 mx-44 my-20 object-cover" 
+          alt={applianceName}
+        />
         <div>
           <p className="text-5xl mt-36 font-semibold">{applianceName}</p>
           <div className="flex mt-8 my-2 text-xl">
@@ -88,19 +107,24 @@ function ApplianceDetails() {
             <p>{modelNumber}</p>
           </div>
           <p className="text-xl mb-2">your receipts</p>
-          <Receipt name="original" />
-          <Receipt name="insurance" />
-          <Receipt name="service" />
+          {receipts.map((receipt, index) => (
+            <Receipt key={index} name={receipt.name} file={`http://localhost:3000/api/files/${receipt.file}`} />
+          ))}
           <div className="flex space-x-4 mt-8">
             <button
               onClick={() => navigate("/add-receipt", {
-                state: { productName: applianceName }
+                state: { productId: appliance._id, productName: applianceName }
               })}
               className="bg-neutral-950 px-4 py-4 text-xl rounded-lg text-white"
             >
               add more receipts
             </button>
-            <button className="bg-neutral-950 px-4 py-4 text-xl rounded-lg text-white">delete product</button>
+            <button
+              onClick={handleDelete}
+              className="bg-neutral-950 px-4 py-4 text-xl rounded-lg text-white"
+            >
+              delete product
+            </button>
           </div>
         </div>
       </div>

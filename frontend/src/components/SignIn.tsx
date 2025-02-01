@@ -11,8 +11,6 @@ function SignIn() {
       // Call the utility function to handle authentication
       const data = await handleGoogleSuccess(credentialResponse);
 
-      console.log("User authenticated:", data);
-
       // Navigate to home after successful authentication
       navigate("/home");
     } catch (error) {

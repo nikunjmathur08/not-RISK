@@ -1,50 +1,24 @@
 
+import React from 'react';
+
 type ReceiptProps = {
   name: string;
+  file: string;
 };
 
-function Receipt({ name }: ReceiptProps) {
+function Receipt({ name, file }: ReceiptProps) {
   return (
-    <p className="flex text-lg">
-      {name} receipt - 
-      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-        <path
-          d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z"
-          stroke="black"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M14 2V8H20"
-          stroke="black"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M16 13H8"
-          stroke="black"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M16 17H8"
-          stroke="black"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M10 9H9H8"
-          stroke="black"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    </p>
+    <div className="flex items-center justify-between bg-gray-100 p-4 rounded-lg mb-4">
+      <p className="text-lg">{name}</p>
+      <a
+        href={`http://localhost:3000/${file}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="bg-neutral-950 px-4 py-2 text-white rounded-lg"
+      >
+        view
+      </a>
+    </div>
   );
 }
 

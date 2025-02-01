@@ -1,6 +1,41 @@
+import { useState } from "react";
 import Sidebar from "../components/Sidebar";
 
 function Profile() {
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    
+    try {
+      const response = await fetch('http://localhost:3000/api/user', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          firstName: fullName.split(' ')[0],
+          lastName: fullName.split(' ')[1] || ''
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Update local storage with new user data
+        localStorage.setItem('userName', fullName);
+        localStorage.setItem('userEmail', email);
+        alert('Profile updated successfully!');
+      } else {
+        alert('Failed to update profile');
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      alert('Error updating profile');
+    }
+  };
+
   return (
     <div className="flex min-h-screen">
       <div className="fixed top-0 left-0 h-screen">
@@ -11,17 +46,17 @@ function Profile() {
           <p className="text-3xl font-semibold mb-8 ml-4">edit profile</p>
           <div className="flex items-center mb-8 mt-20 ml-4">
             <div className="h-16 w-16 bg-violet-300 rounded-full flex items-center justify-center text-lg font-bold uppercase text-white">
-              N
+              {fullName ? fullName[0].toUpperCase() : 'N'}
             </div>
             <div className="ml-4">
-              <p className="text-xl font-medium">nikunj mathur</p>
+              <p className="text-xl font-medium">{fullName || "nikunj mathur"}</p>
               <button className="text-violet-700 underline mt-1">
                 change profile photo
               </button>
             </div>
           </div>
           <div className="mt-8 max-w-2xl ml-4">
-            <form className="space-y-6">
+            <form className="space-y-6" onSubmit={handleSubmit}>
               <div>
                 <label
                   htmlFor="fullName"
@@ -33,6 +68,8 @@ function Profile() {
                   type="text"
                   id="fullName"
                   name="fullName"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
                   placeholder="nikunj mathur"
                   className="mt-3 w-full border-2 rounded p-2 focus:outline-none focus:ring-2 focus:ring-violet-700"
                 />
@@ -48,6 +85,8 @@ function Profile() {
                   type="email"
                   id="email"
                   name="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="nikunjmathur0810@gmail.com"
                   className="mt-3 w-full border-2 rounded p-2 focus:outline-none focus:ring-2 focus:ring-violet-700"
                 />

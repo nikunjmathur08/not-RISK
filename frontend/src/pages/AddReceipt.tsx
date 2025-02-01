@@ -17,24 +17,34 @@ function AddReceipt() {
     }
   };
 
+  const [receiptType, setReceiptType] = useState("");
+
+  const receiptTypes = [
+    "Purchase Receipt",
+    "Warranty Card",
+    "Insurance Document",
+    "Service Record",
+    "Installation Document"
+  ];
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
+  
     const formData = new FormData();
-    formData.append('receiptName', receiptName);
-    formData.append('productId', productId);
+    formData.append('name', receiptName);
+    formData.append('type', receiptType);
     if (receiptFile) {
-      formData.append('receiptFile', receiptFile);
+      formData.append('originalReceipt', receiptFile);
     }
-
+  
     try {
-      const response = await fetch('http://localhost:3001/api/receipts', {
-        method: 'POST',
+      const response = await fetch(`http://localhost:3000/api/appliance/${productId}/receipt`, {
+        method: 'PUT',
         body: formData,
       });
-
+  
       if (response.ok) {
-        navigate('/products'); // Navigate to products list or wherever appropriate
+        navigate(`/appliances/${productId}`);
       } else {
         console.error('Failed to add receipt');
       }
@@ -124,6 +134,30 @@ function AddReceipt() {
                   onChange={handleFileChange}
                 />
               </div>
+            </div>
+
+            {/* Receipt Type */}
+            <div>
+              <label
+                htmlFor="receiptType"
+                className="block text-sm font-medium"
+              >
+                receipt type
+              </label>
+              <select
+                id="receiptType"
+                value={receiptType}
+                onChange={(e) => setReceiptType(e.target.value)}
+                className="mt-3 w-full border-2 text-gray-400 rounded bg-gray-100 p-2 focus:outline-none focus:ring-2 focus:ring-violet-700"
+                required
+              >
+                <option value="">select receipt type</option>
+                {receiptTypes.map((type, index) => (
+                  <option key={index} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Submit Button */}

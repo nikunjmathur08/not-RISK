@@ -10,6 +10,10 @@ function AddProduct() {
   const [fileName, setFileName] = useState("choose file");
   const [modelNumber, setModelNumber] = useState("");
   const [productImage, setProductImage] = useState<File | null>(null);
+  const [originalReceipt, setOriginalReceipt] = useState<File | null>(null);
+  const [originalReceiptName, setOriginalReceiptName] = useState("choose file");
+  const [insuranceReceipt, setInsuranceReceipt] = useState<File | null>(null);
+  const [insuranceReceiptName, setInsuranceReceiptName] = useState("choose file");
 
   const months = [
     "January",
@@ -37,32 +41,108 @@ function AddProduct() {
     }
   };
 
+  const handleReceiptChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files ? event.target.files[0] : null;
+    if (file) {
+      setOriginalReceipt(file);
+      setOriginalReceiptName(file.name);
+    }
+  };
+
+  const [originalReceiptType, setOriginalReceiptType] = useState("");
+  const [insuranceReceiptType, setInsuranceReceiptType] = useState("");
+  
+  const receiptTypes = [
+    "Purchase Receipt",
+    "Warranty Card",
+    "Insurance Document",
+    "Service Record",
+    "Installation Document"
+  ];
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+  
+    console.log('Form submission started');
+    console.log('Form data:', { productName, modelNumber, selectedYear, selectedMonth, selectedDate });
+    console.log('Files:', { productImage, originalReceipt, insuranceReceipt });
 
-    const formData = new FormData();
-    formData.append('productName', productName);
-    formData.append('purchaseDate', `${selectedYear}-${selectedMonth}-${selectedDate}`);
-    formData.append('modelNumber', modelNumber);
-    if (productImage) {
-      formData.append('productImage', productImage);
+    if (!productName || !modelNumber || !selectedYear || !selectedMonth || !selectedDate || !productImage || !originalReceipt || !originalReceiptType) {
+      console.error('Validation failed:', { 
+        productName: !productName,
+        modelNumber: !modelNumber,
+        date: !selectedYear || !selectedMonth || !selectedDate,
+        productImage: !productImage,
+        originalReceipt: !originalReceipt,
+        originalReceiptType: !originalReceiptType
+      });
+      alert('Please fill in all required fields');
+      return;
     }
 
+    const formData = new FormData();
+    formData.append('name', productName);
+    formData.append('modelNumber', modelNumber);
+    const monthIndex = months.indexOf(selectedMonth) + 1;
+    const formattedDate = `${selectedYear}-${monthIndex.toString().padStart(2, '0')}-${selectedDate.toString().padStart(2, '0')}`;
+    formData.append('purchaseDate', formattedDate);
+    
     try {
-      const response = await fetch('http://localhost:3001/api/products', {
+      console.log('Validating file types...');
+      // Validate file types
+      if (productImage && !['image/jpeg', 'image/png'].includes(productImage.type)) {
+        console.error('Invalid product image type:', productImage.type);
+        alert('Product image must be a JPEG or PNG file');
+        return;
+      }
+      
+      if (originalReceipt && !['image/jpeg', 'image/png', 'application/pdf'].includes(originalReceipt.type)) {
+        console.error('Invalid original receipt type:', originalReceipt.type);
+        alert('Original receipt must be a JPEG, PNG, or PDF file');
+        return;
+      }
+      
+      if (insuranceReceipt && !['image/jpeg', 'image/png', 'application/pdf'].includes(insuranceReceipt.type)) {
+        console.error('Invalid insurance receipt type:', insuranceReceipt.type);
+        alert('Insurance receipt must be a JPEG, PNG, or PDF file');
+        return;
+      }
+
+      console.log('Appending files to FormData...');
+      formData.append('productImage', productImage);
+      formData.append('originalReceipt', originalReceipt);
+      formData.append('originalReceiptType', originalReceiptType);
+      
+      if (insuranceReceipt && insuranceReceiptType) {
+        formData.append('insuranceReceipt', insuranceReceipt);
+        formData.append('insuranceReceiptType', insuranceReceiptType);
+      }
+
+      console.log('Sending request to server...');
+      const response = await fetch('http://localhost:3000/api/v1/appliance/add', {
         method: 'POST',
         body: formData,
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        credentials: 'include'
       });
 
-      if (response.ok) {
-        const result = await response.json();
-        navigate('/add-receipt', { state: { productId: result._id, productName } });
-      } else {
-        console.error('Failed to add product');
+      console.log('Server response status:', response.status);
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Server error response:', errorData);
+        throw new Error(errorData?.message || 'Failed to add product');
       }
+    
+      const result = await response.json();
+      console.log('Success response:', result);
+      navigate('/appliances');
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error details:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to add product';
+      console.error('Error:', errorMessage);
+      alert(errorMessage);
     }
   };
 
@@ -213,7 +293,99 @@ function AddProduct() {
                 name="productImage"
                 accept="image/*"
                 className="sr-only"
-                onChange={handleFileChange}
+                onChange={(e) => {
+                  const file = e.target.files ? e.target.files[0] : null;
+                  if (file) {
+                    setProductImage(file);
+                    setFileName(file.name);
+                  }
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Original Receipt Upload */}
+          <div>
+            <label
+              htmlFor="originalReceipt"
+              className="block text-sm font-medium"
+            >
+              original receipt
+            </label>
+            <div className="mt-2 space-y-2">
+              <select
+                id="originalReceiptType"
+                value={originalReceiptType}
+                onChange={(e) => setOriginalReceiptType(e.target.value)}
+                className="w-full border-2 text-gray-400 rounded bg-gray-100 p-2 focus:outline-none focus:ring-2 focus:ring-violet-700"
+                required
+              >
+                <option value="">select receipt type</option>
+                {receiptTypes.map((type, index) => (
+                  <option key={index} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+              <label
+                htmlFor="originalReceipt"
+                className="block w-full cursor-pointer py-2 px-4 border border-gray-300 rounded-md bg-gray-100 text-gray-400 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-violet-700"
+              >
+                {originalReceiptName}
+              </label>
+              <input
+                type="file"
+                id="originalReceipt"
+                name="originalReceipt"
+                accept="image/*,.pdf"
+                className="sr-only"
+                onChange={handleReceiptChange}
+                required
+              />
+            </div>
+          </div>
+
+          {/* Insurance Receipt Upload */}
+          <div>
+            <label
+              htmlFor="insuranceReceipt"
+              className="block text-sm font-medium"
+            >
+              insurance receipt
+            </label>
+            <div className="mt-2 space-y-2">
+              <select
+                id="insuranceReceiptType"
+                value={insuranceReceiptType}
+                onChange={(e) => setInsuranceReceiptType(e.target.value)}
+                className="w-full border-2 text-gray-400 rounded bg-gray-100 p-2 focus:outline-none focus:ring-2 focus:ring-violet-700"
+              >
+                <option value="">select receipt type</option>
+                {receiptTypes.map((type, index) => (
+                  <option key={index} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+              <label
+                htmlFor="insuranceReceipt"
+                className="block w-full cursor-pointer py-2 px-4 border border-gray-300 rounded-md bg-gray-100 text-gray-400 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-violet-700"
+              >
+                {insuranceReceiptName}
+              </label>
+              <input
+                type="file"
+                id="insuranceReceipt"
+                name="insuranceReceipt"
+                accept="image/*,.pdf"
+                className="sr-only"
+                onChange={(e) => {
+                  const file = e.target.files ? e.target.files[0] : null;
+                  if (file) {
+                    setInsuranceReceipt(file);
+                    setInsuranceReceiptName(file.name);
+                  }
+                }}
               />
             </div>
           </div>

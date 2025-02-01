@@ -1,7 +1,8 @@
-import { useNavigate } from "react-router-dom"
+import { useNavigate } from "react-router-dom";
 
 function Navbar({ name } : { name: string }) {
   const navigate = useNavigate();
+  const displayName = localStorage.getItem('userName') || name;
 
   return (
     <nav className="my-6 flex justify-between">
@@ -10,14 +11,14 @@ function Navbar({ name } : { name: string }) {
       </div>
       <div onClick={() => navigate("/profile")} className="pr-4">
         <button className="pr-4">
-          hi, {name}!
+          hi, {displayName}!
         </button>
         <button className="bg-violet-700 text-slate-50 py-2 px-3 rounded-full text-xl w-12 h-12 items-center justify-center">
-          {name[0]}
+          {displayName[0]}
         </button>
       </div>
     </nav>
   )
 }
 
-export default Navbar
+export default Navbar;

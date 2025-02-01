@@ -1,4 +1,8 @@
-function SearchBox() {
+interface SearchBoxProps {
+  onSearch: (query: string) => void;
+}
+
+function SearchBox({ onSearch }: SearchBoxProps) {
   return (
     <div className="flex items-center border border-gray-400 rounded-lg p-2 hover:shadow-md transition-shadow duration-200 my-2">
       <svg
@@ -30,6 +34,7 @@ function SearchBox() {
         placeholder="Search..."
         className="flex-grow outline-none border-none"
         aria-label="Search input"
+        onChange={(e) => onSearch(e.target.value)}
       />
     </div>
   );
