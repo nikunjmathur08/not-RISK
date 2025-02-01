@@ -177,24 +177,46 @@ router.post("/signin", async (req, res) => {
 
 const updateBody = zod.object({
   password: zod.string().optional(),
-  firstName: zod.object().optional(),
-  lastName: zod.object().optional(),
-})
+  firstName: zod.string().optional(),
+  lastName: zod.string().optional(),
+});
 
 router.put("/", authMiddleware, async (req, res) => {
-  const { success } = updateBody.safeParse(req.body);
-  if (!success) {
-    res.status(400).json({
-      message: "Error while updating information",
-      errors: error.errors,
-    })
+  try {
+    const { success, error } = updateBody.safeParse(req.body);
+    if (!success) {
+      return res.status(400).json({
+        message: "Error while updating information",
+        errors: error.errors,
+      });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.userId,
+      { $set: req.body },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        message: "User not found"
+      });
+    }
+
+    res.json({
+      message: "Updated successfully",
+      user: {
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
+        username: updatedUser.username
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error updating user information",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
-
-  await User.updateOne({ _id: req.userId }, req.body);
-
-  res.json({
-    message: "Updated successfully"
-  })
-})
+});
 
 module.exports = router;

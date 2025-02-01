@@ -1,7 +1,54 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const { type } = require("os");
-mongoose.connect("mongodb://localhost:27017/receipts");
+const { GridFSBucket } = require("mongodb");
+
+let bucket;
+let isInitialized = false;
+
+// Create a promise-based connection
+const connectDB = async () => {
+  if (isInitialized) return bucket;
+
+  try {
+    const conn = await mongoose.connect("mongodb://localhost:27017/receipts");
+    console.log('MongoDB Connected');
+
+    let retryCount = 0;
+    const maxRetries = 5;
+
+    while (!isInitialized && retryCount < maxRetries) {
+      try {
+        if (mongoose.connection.db) {
+          bucket = new GridFSBucket(mongoose.connection.db, {
+            bucketName: 'uploads'
+          });
+          isInitialized = true;
+          console.log('GridFS bucket initialized');
+          return bucket;
+        }
+      } catch (err) {
+        console.error(`Attempt ${retryCount + 1} failed to initialize bucket:`, err);
+      }
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      retryCount++;
+    }
+
+    if (!isInitialized) {
+      console.error('Failed to initialize GridFS bucket after multiple attempts');
+      process.exit(1);  // Exit the server if bucket fails to initialize
+    }
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+    process.exit(1);
+  }
+};
+
+
+// Connect to MongoDB and initialize bucket
+connectDB().catch(error => {
+  console.error('Failed to initialize bucket:', error);
+  process.exit(1);
+});
 
 const userSchema = new mongoose.Schema({
   firstName: {
@@ -60,7 +107,7 @@ const applianceSchema = new mongoose.Schema({
     require: true
   },
   productImage: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
     require: true
   },
   receipts: [{
@@ -70,7 +117,7 @@ const applianceSchema = new mongoose.Schema({
       trim: true
     },
     file: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
       require: true
     },
     createdAt: {
@@ -84,4 +131,4 @@ const User = new mongoose.model("User", userSchema)
 const Account = new mongoose.model("Account", accountSchema)
 const Appliance = new mongoose.model("Appliance", applianceSchema)
 
-module.exports = { User, Account, Appliance }
+module.exports = { User, Account, Appliance, bucket }
