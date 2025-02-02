@@ -1,15 +1,38 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "../components/Sidebar";
 
 function Profile() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
 
+  const fetchUserData = async () => {
+    try {
+      const response = await fetch('http://localhost:3000/api/v1/user', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const { user } = data;
+        setFullName(`${user.firstName} ${user.lastName}`.trim());
+        setEmail(user.username);
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchUserData();
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
     try {
-      const response = await fetch('http://localhost:3000/api/user', {
+      const response = await fetch('http://localhost:3000/api/v1/user', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -23,12 +46,14 @@ function Profile() {
 
       if (response.ok) {
         const data = await response.json();
-        // Update local storage with new user data
-        localStorage.setItem('userName', fullName);
-        localStorage.setItem('userEmail', email);
+        const { user } = data;
+        
+        // Update the displayed name with fresh data from backend
+        setFullName(`${user.firstName} ${user.lastName}`.trim());
         alert('Profile updated successfully!');
       } else {
-        alert('Failed to update profile');
+        const errorData = await response.json();
+        alert(errorData.message || 'Failed to update profile');
       }
     } catch (error) {
       console.error('Error updating profile:', error);

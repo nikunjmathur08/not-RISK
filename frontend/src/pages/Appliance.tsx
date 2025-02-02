@@ -2,13 +2,15 @@ import ApplianceCard from "../components/ApplianceCard";
 import SearchBox from "../components/SearchBox";
 import Sidebar from "../components/Sidebar";
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { getAppliances } from "../utils/api";
 
 function Appliance() {
-  const [appliances, setAppliances] = useState<Array<{ id: string; name: string }>>([]);
+  const [searchParams] = useSearchParams();
+  const [appliances, setAppliances] = useState<Array<{ id: string; name: string; productImage: { data: string; contentType: string } }>>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || "");
 
   useEffect(() => {
     const fetchAppliances = async () => {
@@ -47,26 +49,15 @@ function Appliance() {
           </div>
           <p className="my-8 text-3xl font-semibold">your appliances</p>
           <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {appliances.map((appliance) => (
+            {appliances && appliances.map((appliance, index) => (
               <ApplianceCard
-                key={appliance.id}
+                key={`${appliance.id}-${index}`}
                 id={appliance.id}
                 applianceName={appliance.name}
-                applianceImg="/temp/Refrigerator.jpg"
+                applianceImg={`data:${appliance.productImage.contentType};base64,${appliance.productImage.data}`}
                 companyName=""
               />
             ))}
-            <ApplianceCard id="7" companyName="Haier" applianceName="Haier Refrigerator" applianceImg="/temp/Refrigerator.jpg" />
-            <ApplianceCard id="8" companyName="Haier" applianceName="Haier Refrigerator" applianceImg="/temp/Refrigerator.jpg" />
-            <ApplianceCard id="9" companyName="Haier" applianceName="Haier Refrigerator" applianceImg="/temp/Refrigerator.jpg" />
-            <ApplianceCard id="10" companyName="Haier" applianceName="Haier Refrigerator" applianceImg="/temp/Refrigerator.jpg" />
-            <ApplianceCard id="11" companyName="Haier" applianceName="Haier Refrigerator" applianceImg="/temp/Refrigerator.jpg" />
-            <ApplianceCard id="12" companyName="Haier" applianceName="Haier Refrigerator" applianceImg="/temp/Refrigerator.jpg" />
-            <ApplianceCard id="13" companyName="Haier" applianceName="Haier Refrigerator" applianceImg="/temp/Refrigerator.jpg" />
-            <ApplianceCard id="14" companyName="Haier" applianceName="Haier Refrigerator" applianceImg="/temp/Refrigerator.jpg" />
-            <ApplianceCard id="15" companyName="Haier" applianceName="Haier Refrigerator" applianceImg="/temp/Refrigerator.jpg" />
-            <ApplianceCard id="16" companyName="Haier" applianceName="Haier Refrigerator" applianceImg="/temp/Refrigerator.jpg" />
-            <ApplianceCard id="17" companyName="Haier" applianceName="Haier Refrigerator" applianceImg="/temp/Refrigerator.jpg" />
           </div>
         </div>
       </main>
