@@ -3,21 +3,39 @@ import React from 'react';
 
 type ReceiptProps = {
   name: string;
-  file: string;
+  receiptId: string;
+  applianceId: string;
 };
 
-function Receipt({ name, file }: ReceiptProps) {
+function Receipt({ name, receiptId, applianceId }: ReceiptProps) {
+  const handleClick = () => {
+    const token = localStorage.getItem('token');
+    window.open(`http://localhost:3000/api/v1/appliance/${applianceId}/receipt/${receiptId}?token=${token}`, '_blank');
+  };
+
   return (
-    <div className="flex items-center justify-between bg-gray-100 p-4 rounded-lg mb-4">
-      <p className="text-lg">{name}</p>
-      <a
-        href={`http://localhost:3000/${file}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="bg-neutral-950 px-4 py-2 text-white rounded-lg"
+    <div
+      onClick={handleClick}
+      className="flex items-center space-x-3 p-2 rounded-lg mb-2 cursor-pointer hover:bg-gray-200 transition-colors"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       >
-        view
-      </a>
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
+        <line x1="16" y1="13" x2="8" y2="13" />
+        <line x1="16" y1="17" x2="8" y2="17" />
+        <line x1="10" y1="9" x2="8" y2="9" />
+      </svg>
+      <span className="text-lg">{name}</span>
     </div>
   );
 }
