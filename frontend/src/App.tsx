@@ -13,7 +13,6 @@ import Error from './pages/Error'
 import Profile from './pages/Profile'
 
 function App() {
-
   return (
     <Router>
       <Routes>
@@ -29,19 +28,6 @@ function App() {
       </Routes>
     </Router>
   )
-
-  // return (
-  //   <>
-  //     {/* <Sidebar /> */}
-  //     {/* <HomePage /> */}
-  //     {/* <Appliance /> */}
-  //     {/* <ApplianceDetails applianceName='Haier Refrigerator' purchaseDate='November 2024' modelNumber='21MAB204T'/> */}
-  //     {/* <AddProduct /> */}
-  //     {/* <AddReceipt title="Haier Refrigerator"/> */}
-  //     {/* <SignInSignUp /> */}
-
-  //   </>
-  // )
 }
 
 export default App
