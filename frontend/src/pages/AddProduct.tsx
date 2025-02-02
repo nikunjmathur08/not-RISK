@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { addAppliance } from '../utils/api';
 
 function AddProduct() {
   const navigate = useNavigate();
@@ -62,10 +63,6 @@ function AddProduct() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-  
-    console.log('Form submission started');
-    console.log('Form data:', { productName, modelNumber, selectedYear, selectedMonth, selectedDate });
-    console.log('Files:', { productImage, originalReceipt, insuranceReceipt });
 
     if (!productName || !modelNumber || !selectedYear || !selectedMonth || !selectedDate || !productImage || !originalReceipt || !originalReceiptType) {
       console.error('Validation failed:', { 
@@ -88,7 +85,6 @@ function AddProduct() {
     formData.append('purchaseDate', formattedDate);
     
     try {
-      console.log('Validating file types...');
       // Validate file types
       if (productImage && !['image/jpeg', 'image/png'].includes(productImage.type)) {
         console.error('Invalid product image type:', productImage.type);
@@ -108,7 +104,6 @@ function AddProduct() {
         return;
       }
 
-      console.log('Appending files to FormData...');
       formData.append('productImage', productImage);
       formData.append('originalReceipt', originalReceipt);
       formData.append('originalReceiptType', originalReceiptType);
@@ -118,25 +113,7 @@ function AddProduct() {
         formData.append('insuranceReceiptType', insuranceReceiptType);
       }
 
-      console.log('Sending request to server...');
-      const response = await fetch('http://localhost:3000/api/v1/appliance/add', {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        credentials: 'include'
-      });
-
-      console.log('Server response status:', response.status);
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Server error response:', errorData);
-        throw new Error(errorData?.message || 'Failed to add product');
-      }
-    
-      const result = await response.json();
-      console.log('Success response:', result);
+      const { appliance } = await addAppliance(formData);
       navigate('/appliances');
     } catch (error) {
       console.error('Error details:', error);
