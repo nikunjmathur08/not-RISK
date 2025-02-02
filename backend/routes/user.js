@@ -181,30 +181,59 @@ const updateBody = zod.object({
   lastName: zod.string().optional(),
 });
 
-router.put("/", authMiddleware, async (req, res) => {
+router.get("/", authMiddleware, async (req, res) => {
   try {
-    const { success, error } = updateBody.safeParse(req.body);
-    if (!success) {
-      return res.status(400).json({
-        message: "Error while updating information",
-        errors: error.errors,
-      });
-    }
-
-    const updatedUser = await User.findByIdAndUpdate(
-      req.userId,
-      { $set: req.body },
-      { new: true, runValidators: true }
-    );
-
-    if (!updatedUser) {
+    const user = await User.findById(req.userId);
+    if (!user) {
       return res.status(404).json({
         message: "User not found"
       });
     }
 
     res.json({
-      message: "Updated successfully",
+      user: {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        username: user.username
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error fetching user information",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+router.put("/", authMiddleware, async (req, res) => {
+  try {
+    const { success, data, error } = updateBody.safeParse(req.body);
+    if (!success) {
+      return res.status(400).json({
+        message: "Invalid input data",
+        errors: error.errors
+      });
+    }
+
+    const user = await User.findById(req.userId);
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found"
+      });
+    }
+
+    if (data.password) {
+      data.password = await bcrypt.hash(data.password, 10);
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.userId,
+      { $set: data },
+      { new: true }
+    );
+
+    res.json({
+      message: "Profile updated successfully",
       user: {
         firstName: updatedUser.firstName,
         lastName: updatedUser.lastName,
@@ -213,7 +242,7 @@ router.put("/", authMiddleware, async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({
-      message: "Error updating user information",
+      message: "Error updating profile",
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }

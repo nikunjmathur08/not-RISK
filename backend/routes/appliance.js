@@ -1,9 +1,9 @@
 const express = require("express");
 const multer = require("multer");
-const { Appliance, bucket } = require("../db");
+const { Appliance } = require("../db");
 const { authMiddleware } = require("../authMiddleware");
 const zod = require("zod");
-const { ObjectId } = require("mongodb");
+const jwt = require("jsonwebtoken");
 
 const router = express.Router();
 
@@ -33,18 +33,7 @@ router.post("/add", authMiddleware, upload.fields([
   { name: "originalReceipt", maxCount: 1 },
   { name: "insuranceReceipt", maxCount: 1 },
 ]), async (req, res) => {
-  // Ensure bucket is initialized
-  if (!bucket) {
-    console.error('GridFS bucket not initialized');
-    return res.status(500).json({
-      message: "Server is not ready to handle file uploads",
-      details: "Ensure MongoDB is running and GridFS is initialized",
-    });
-  }
   try {
-    console.log('Received add appliance request');
-    console.log('Request body:', req.body);
-    console.log('Files received:', req.files);
 
     if (!req.files || !req.files["originalReceipt"]) {
       console.error('Missing original receipt');
@@ -57,7 +46,6 @@ router.post("/add", authMiddleware, upload.fields([
     let purchaseDate;
     try {
       purchaseDate = new Date(`${req.body.purchaseDate}`);
-      console.log('Parsed purchase date:', purchaseDate);
       if (isNaN(purchaseDate.getTime())) {
         throw new Error('Invalid date');
       }
@@ -69,7 +57,6 @@ router.post("/add", authMiddleware, upload.fields([
       });
     }
 
-    console.log('Validating input data...');
     const { success, data, error } = applianceSchema.safeParse({
       ...req.body,
       purchaseDate: purchaseDate.toISOString()
@@ -89,76 +76,47 @@ router.post("/add", authMiddleware, upload.fields([
       });
     }
 
-    console.log('Uploading product image...');
-    const productImageId = new ObjectId();
-    try {
-      const productImageUploadStream = bucket.openUploadStreamWithId(productImageId, req.files["productImage"][0].originalname);
-      await new Promise((resolve, reject) => {
-        productImageUploadStream.end(req.files["productImage"][0].buffer, async (error) => {
-          if (error) {
-            console.error('Error uploading product image:', error);
-            reject(error);
-          }
-          resolve();
-        });
-      });
-    } catch (error) {
-      console.error('Error initializing product image upload:', error);
-      return res.status(500).json({
-        message: "Error uploading product image",
-        error: process.env.NODE_ENV === 'development' ? error.message : undefined
-      });
-    }
+    const productImage = req.files["productImage"][0];
+    const productImageData = {
+      data: productImage.buffer.toString('base64'),
+      contentType: productImage.mimetype,
+      fileName: productImage.originalname,
+      fileSize: productImage.size
+    };
 
-    console.log('Uploading original receipt...');
-    const originalReceiptId = new ObjectId();
-    const uploadStream = bucket.openUploadStreamWithId(originalReceiptId, req.files["originalReceipt"][0].originalname);
-    await new Promise((resolve, reject) => {
-      uploadStream.end(req.files["originalReceipt"][0].buffer, async (error) => {
-        if (error) {
-          console.error('Error uploading original receipt:', error);
-          reject(error);
-        }
-        resolve();
-      });
-    });
+    const originalReceipt = req.files["originalReceipt"][0];
+    const originalReceiptData = {
+      name: req.body.originalReceiptType || "Original Receipt",
+      data: originalReceipt.buffer.toString('base64'),
+      contentType: originalReceipt.mimetype,
+      fileName: originalReceipt.originalname,
+      fileSize: originalReceipt.size
+    };
 
-    let insuranceReceiptId;
+    let insuranceReceiptData;
     if (req.files["insuranceReceipt"]) {
-      console.log('Uploading insurance receipt...');
-      insuranceReceiptId = new ObjectId();
-      const insuranceUploadStream = bucket.openUploadStreamWithId(insuranceReceiptId, req.files["insuranceReceipt"][0].originalname);
-      await new Promise((resolve, reject) => {
-        insuranceUploadStream.end(req.files["insuranceReceipt"][0].buffer, async (error) => {
-          if (error) {
-            console.error('Error uploading insurance receipt:', error);
-            reject(error);
-          }
-          resolve();
-        });
-      });
+      const insuranceReceipt = req.files["insuranceReceipt"][0];
+      insuranceReceiptData = {
+        name: req.body.insuranceReceiptType || "Insurance Receipt",
+        data: insuranceReceipt.buffer.toString('base64'),
+        contentType: insuranceReceipt.mimetype,
+        fileName: insuranceReceipt.originalname,
+        fileSize: insuranceReceipt.size
+      };
     }
 
-    console.log('Creating appliance record...');
     const appliance = await Appliance.create({
       userId: req.userId,
       name: data.name,
       modelNumber: data.modelNumber,
       purchaseDate: new Date(data.purchaseDate),
-      productImage: productImageId,
+      productImage: productImageData,
       receipts: [
-        {
-          name: req.body.originalReceiptType || "Original Receipt",
-          file: originalReceiptId
-        },
-        ...(insuranceReceiptId ? [{
-          name: req.body.insuranceReceiptType || "Insurance Receipt",
-          file: insuranceReceiptId
-        }] : [])
+        originalReceiptData,
+        ...(insuranceReceiptData ? [insuranceReceiptData] : [])
       ]
     });
 
-    console.log('Appliance created successfully:', appliance);
     res.json({
       message: "Appliance added successfully!",
       appliance,
@@ -176,17 +134,20 @@ router.get("/get", authMiddleware, async (req, res) => {
   const filter = req.query.filter || "";
 
   const appliances = await Appliance.find({
+    userId: req.userId,
     $or: [{
       name: {
-        "$regex": filter
+        "$regex": filter,
+        "$options": "i"
       }
     }]
   })
 
   res.json({
-    appliance : appliances.map(appliance => ({
+    appliance: appliances.map(appliance => ({
       name: appliance.name,
       id: appliance._id,
+      productImage: appliance.productImage
     }))
   })
 })
@@ -255,25 +216,6 @@ router.get("/:id", authMiddleware, async (req, res) => {
   }
 });
 
-router.get("/files/:fileId", async (req, res) => {
-  try {
-    const fileId = new ObjectId(req.params.fileId);
-    const downloadStream = bucket.openDownloadStream(fileId);
-    
-    downloadStream.on('error', () => {
-      res.status(404).json({ message: "File not found" });
-    });
-
-    res.set('Content-Type', 'application/octet-stream');
-    downloadStream.pipe(res);
-  } catch (error) {
-    res.status(500).json({
-      message: "Error downloading file",
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
-  }
-});
-
 router.delete("/:id", authMiddleware, async (req, res) => {
   try {
     const appliance = await Appliance.findOne({
@@ -319,21 +261,15 @@ router.put("/:id/receipt", authMiddleware, upload.single("originalReceipt"), asy
       });
     }
 
-    const fileId = new ObjectId();
-    const uploadStream = bucket.openUploadStreamWithId(fileId, req.file.originalname);
-    await new Promise((resolve, reject) => {
-      uploadStream.end(req.file.buffer, async (error) => {
-        if (error) reject(error);
-        resolve();
-      });
-    });
+    const receiptData = {
+      name: req.body.name || "Additional Receipt",
+      data: req.file.buffer.toString('base64'),
+      contentType: req.file.mimetype,
+      fileName: req.file.originalname,
+      fileSize: req.file.size
+    };
 
-    appliance.receipts.push({
-      name: req.body.name,
-      type: req.body.type,
-      file: fileId
-    });
-
+    appliance.receipts.push(receiptData);
     await appliance.save();
 
     res.json({
@@ -349,5 +285,47 @@ router.put("/:id/receipt", authMiddleware, upload.single("originalReceipt"), asy
   }
 });
 
+router.get("/:id/receipt/:receiptId", async (req, res) => {
+  try {
+    const token = req.query.token;
+    if (!token) {
+      return res.status(401).json({ message: "No token provided" });
+    }
+
+    // Verify the token and get userId
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.userId;
+
+    const appliance = await Appliance.findOne({
+      _id: req.params.id,
+      userId: userId
+    });
+
+    if (!appliance) {
+      return res.status(404).json({
+        message: "Appliance not found or unauthorized"
+      });
+    }
+
+    const receipt = appliance.receipts.find(r => r._id.toString() === req.params.receiptId);
+
+    if (!receipt) {
+      return res.status(404).json({
+        message: "Receipt not found"
+      });
+    }
+
+    res.setHeader('Content-Type', receipt.contentType);
+    res.setHeader('Content-Disposition', `inline; filename="${receipt.fileName || 'receipt'}"`); 
+    const buffer = Buffer.from(receipt.data, 'base64');
+    res.send(buffer);
+  } catch (error) {
+    console.error('Error fetching receipt:', error);
+    res.status(500).json({
+      message: "Error fetching receipt",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
 
 module.exports = router;

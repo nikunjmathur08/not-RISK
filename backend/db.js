@@ -1,54 +1,18 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const { GridFSBucket } = require("mongodb");
-
-let bucket;
-let isInitialized = false;
 
 // Create a promise-based connection
 const connectDB = async () => {
-  if (isInitialized) return bucket;
-
   try {
-    const conn = await mongoose.connect("mongodb://localhost:27017/receipts");
-    console.log('MongoDB Connected');
-
-    let retryCount = 0;
-    const maxRetries = 5;
-
-    while (!isInitialized && retryCount < maxRetries) {
-      try {
-        if (mongoose.connection.db) {
-          bucket = new GridFSBucket(mongoose.connection.db, {
-            bucketName: 'uploads'
-          });
-          isInitialized = true;
-          console.log('GridFS bucket initialized');
-          return bucket;
-        }
-      } catch (err) {
-        console.error(`Attempt ${retryCount + 1} failed to initialize bucket:`, err);
-      }
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      retryCount++;
-    }
-
-    if (!isInitialized) {
-      console.error('Failed to initialize GridFS bucket after multiple attempts');
-      process.exit(1);  // Exit the server if bucket fails to initialize
-    }
+    await mongoose.connect("mongodb://localhost:27017/receipts");
   } catch (error) {
     console.error('MongoDB connection error:', error);
     process.exit(1);
   }
 };
 
-
-// Connect to MongoDB and initialize bucket
-connectDB().catch(error => {
-  console.error('Failed to initialize bucket:', error);
-  process.exit(1);
-});
+// Connect to MongoDB
+connectDB();
 
 const userSchema = new mongoose.Schema({
   firstName: {
@@ -107,18 +71,46 @@ const applianceSchema = new mongoose.Schema({
     require: true
   },
   productImage: {
-    type: mongoose.Schema.Types.ObjectId,
-    require: true
+    data: {
+      type: String,
+      required: true
+    },
+    contentType: {
+      type: String,
+      required: true
+    },
+    fileName: {
+      type: String,
+      required: true
+    },
+    fileSize: {
+      type: Number,
+      required: true,
+      max: 5 * 1024 * 1024 // 5MB limit
+    }
   },
   receipts: [{
     name: {
       type: String,
-      require: true,
+      required: true,
       trim: true
     },
-    file: {
-      type: mongoose.Schema.Types.ObjectId,
-      require: true
+    data: {
+      type: String,
+      required: true
+    },
+    contentType: {
+      type: String,
+      required: true
+    },
+    fileName: {
+      type: String,
+      required: true
+    },
+    fileSize: {
+      type: Number,
+      required: true,
+      max: 5 * 1024 * 1024 // 5MB limit
     },
     createdAt: {
       type: Date,
@@ -131,4 +123,4 @@ const User = new mongoose.model("User", userSchema)
 const Account = new mongoose.model("Account", accountSchema)
 const Appliance = new mongoose.model("Appliance", applianceSchema)
 
-module.exports = { User, Account, Appliance, bucket }
+module.exports = { User, Account, Appliance }
