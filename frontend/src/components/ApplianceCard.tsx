@@ -3,7 +3,6 @@ import { ApplianceCardProps } from '../types/Appliance'
 
 function ApplianceCard({ id, companyName, applianceName, applianceImg }: ApplianceCardProps) {
   const navigate = useNavigate();
-  console.log(id);
 
   const handleClick = () => {
     if (id) {
@@ -15,9 +14,14 @@ function ApplianceCard({ id, companyName, applianceName, applianceImg }: Applian
       <p className='text-violet-700 text-left'>{companyName.toUpperCase()}</p>
       <div className="flex-1 flex items-center justify-center py-4">
         <img 
-          src={applianceImg.startsWith('data:') ? applianceImg : `http://localhost:3000/api/files/${applianceImg}`} 
+          src={applianceImg || ''} 
           alt={applianceName} 
           className='h-32 w-32 sm:h-40 sm:w-40 md:h-48 md:w-48 object-cover rounded-lg'
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.onerror = null;
+            target.src = 'https://via.placeholder.com/150';
+          }}
         />
       </div>
       <p className='text-left'>{applianceName}</p>
