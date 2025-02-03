@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import Sidebar from "../components/Sidebar";
+import { useNavigate } from "react-router-dom";
 
 function Profile() {
+  const navigate = useNavigate();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
 
@@ -61,6 +63,16 @@ function Profile() {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    document.cookie.split(';').forEach(cookie => {
+      document.cookie = cookie
+        .replace(/^ +/, '')
+        .replace(/=.*/, '=;expires=' + new Date().toUTCString() + ';path=/');
+    });
+    navigate('/');
+  };
+
   return (
     <div className="flex min-h-screen">
       <div className="fixed top-0 left-0 h-screen">
@@ -111,17 +123,23 @@ function Profile() {
                   id="email"
                   name="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="nikunjmathur0810@gmail.com"
-                  className="mt-3 w-full border-2 rounded p-2 focus:outline-none focus:ring-2 focus:ring-violet-700"
+                  disabled
+                  className="mt-3 w-full border-2 rounded p-2 bg-gray-100 cursor-not-allowed"
                 />
               </div>
-              <div className="flex justify-center">
+              <div className="flex space-x-4">
                 <button
                   type="submit"
-                  className="w-full bg-violet-700 text-white py-2 px-4 rounded-md text-lg font-semibold hover:bg-violet-800 focus:ring-2 focus:ring-offset-2 focus:ring-violet-700"
+                  className="bg-violet-700 text-white py-2 px-6 rounded-lg shadow-lg hover:bg-violet-800"
                 >
                   save changes
+                </button>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="bg-red-600 text-white py-2 px-6 rounded-lg shadow-lg hover:bg-red-700"
+                >
+                  logout
                 </button>
               </div>
             </form>
