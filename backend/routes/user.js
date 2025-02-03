@@ -96,11 +96,11 @@ router.post('/upload', upload.single('file'), (req, res) => {
 });
 
 router.post("/signup", async (req, res) => {
-  const { success } = signUpBody.safeParse(req.body)
-  if (!success) {
+  const result = signUpBody.safeParse(req.body)
+  if (!result.success) {
     return res.status(400).json({
-      message: "Email already taken/Incorrect inputs.",
-      errors: error.errors,
+      message: "Invalid input format",
+      errors: result.error.errors
     })
   }
 
@@ -109,34 +109,42 @@ router.post("/signup", async (req, res) => {
   })
 
   if (existingUser) {
-    return res.status(411).json({
-      message: "Email already taken/Incorrect inputs."
+    return res.status(409).json({
+      message: "Email already taken"
     })
   }
 
-  const user = await User.create({
-    username: req.body.username,
-    firstName: req.body.firstName,
-    lastName: req.body.lastName,
-    password: hashedPassword,
-  })
+  try {
+    const user = await User.create({
+      username: req.body.username,
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      password: await bcrypt.hash(req.body.password, 10)
+    })
 
-  const userId = user._id;
+    const userId = user._id;
 
-  await Account.create({
-    userId,
-  })
+    await Account.create({
+      userId,
+    })
 
-  const token = jwt.sign({
-    userId
-  }, JWT_SECRET,
-    { expiresIn: '12h' }
-  );
+    const token = jwt.sign({
+      userId
+    }, JWT_SECRET,
+      { expiresIn: '12h' }
+    );
 
-  res.json({
-    message: "User created successfully!",
-    token: token
-  })
+    res.status(201).json({
+      message: "User created successfully!",
+      token: token
+    })
+  } catch (error) {
+    console.error('Error creating user:', error);
+    res.status(500).json({
+      message: "Error creating user",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    })
+  }
 })
 
 const signinBody = zod.object({
@@ -155,24 +163,30 @@ router.post("/signin", async (req, res) => {
   }
 
   const user = await User.findOne({
-    username: req.body.username,
-    password: req.body.password
+    username: req.body.username
   });
 
-  if (user) {
-    const token = jwt.sign({
-      userId: user._id
-    }, JWT_SECRET);
-
-    res.json({
-      token: token
-    })
-    return;
+  if (!user) {
+    return res.status(401).json({
+      message: "Invalid credentials"
+    });
   }
 
-  res.status(411).json({
-    message: "Error while logging in"
-  })
+  const isPasswordValid = await bcrypt.compare(req.body.password, user.password);
+
+  if (!isPasswordValid) {
+    return res.status(401).json({
+      message: "Invalid credentials"
+    });
+  }
+
+  const token = jwt.sign({
+    userId: user._id
+  }, JWT_SECRET);
+
+  res.json({
+    token: token
+  });
 })
 
 const updateBody = zod.object({
