@@ -1,10 +1,33 @@
 
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
-import { handleGoogleSuccess } from '../utils/auth';
+import { handleGoogleSuccess, handleSignUp } from '../utils/auth';
 
 function SignUp () {
   const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (!email || !name || !password) {
+      setError('Please fill in all fields');
+      return;
+    }
+
+    try {
+      await handleSignUp({ email, name, password });
+      navigate('/home');
+    } catch (error) {
+      console.error('Signup failed:', error);
+      setError('Failed to sign up. Please try again.');
+    }
+  };
 
   const onGoogleSuccess = async (credentialResponse: any) => {
     try {
@@ -12,6 +35,7 @@ function SignUp () {
       navigate('/home');
     } catch (error) {
       console.error('Google authentication failed:', error);
+      setError('Failed to sign up with Google. Please try again.');
     }
   };
 
@@ -36,7 +60,13 @@ function SignUp () {
         <p className="font-bold text-3xl mb-16">!RISK</p>
         <p className="text-2xl font-semibold mb-10">sign up to !RISK</p>
 
-        <form className="w-full space-y-6">
+        {error && (
+          <div className="w-full p-3 mb-4 text-red-500 bg-red-100 rounded">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="w-full space-y-6">
           {/* Email Input */}
           <div>
             <label htmlFor="userEmail" className="block text-sm font-medium mb-2">
@@ -45,6 +75,8 @@ function SignUp () {
             <input
               type="email"
               id="userEmail"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               placeholder="enter your mail"
               className="w-full border-2 rounded bg-gray-100 p-2 focus:outline-none focus:ring-2 focus:ring-violet-700"
             />
@@ -57,6 +89,8 @@ function SignUp () {
             <input
               type="text"
               id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               placeholder="enter your name"
               className="w-full border-2 rounded bg-gray-100 p-2 focus:outline-none focus:ring-2 focus:ring-violet-700"
             />
@@ -72,13 +106,17 @@ function SignUp () {
             <input
               type="password"
               id="userPassword"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               placeholder="enter your password"
               className="w-full border-2 rounded bg-gray-100 p-2 focus:outline-none focus:ring-2 focus:ring-violet-700"
             />
           </div>
 
           {/* Sign In Button */}
-          <button className="w-full bg-violet-700 rounded py-2 text-white text-lg font-semibold hover:bg-violet-800">
+          <button
+            type="submit"
+            className="w-full bg-violet-700 rounded py-2 text-white text-lg font-semibold hover:bg-violet-800">
             sign up
           </button>
 
@@ -89,7 +127,7 @@ function SignUp () {
             <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
               <GoogleLogin
                 onSuccess={onGoogleSuccess}
-                onError={() => console.log('Login Failed')}
+                onError={() => setError('Google sign up failed. Please try again.')}
                 useOneTap
               />
             </GoogleOAuthProvider>

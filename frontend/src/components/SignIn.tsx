@@ -1,9 +1,31 @@
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
-import { handleGoogleSuccess } from "../utils/auth";
+import { handleGoogleSuccess, handleSignIn } from "../utils/auth";
 
 function SignIn() {
   const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (!email || !password) {
+      setError('Please fill in all fields');
+      return;
+    }
+
+    try {
+      await handleSignIn(email, password);
+      navigate('/home');
+    } catch (error) {
+      console.error('Sign in failed:', error);
+      setError('Failed to sign in. Please check your credentials.');
+    }
+  };
 
   // Google Sign-In success handler
   const onGoogleSuccess = async (credentialResponse: any) => {
@@ -26,7 +48,13 @@ function SignIn() {
         <p className="font-bold text-3xl mb-16">!RISK</p>
         <p className="text-2xl font-semibold mb-10">Sign in to !RISK</p>
 
-        <form className="w-full space-y-6">
+        {error && (
+          <div className="w-full p-3 mb-4 text-red-500 bg-red-100 rounded">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="w-full space-y-6">
           {/* Email Input */}
           <div>
             <label htmlFor="userEmail" className="block text-sm font-medium mb-2">
@@ -36,6 +64,8 @@ function SignIn() {
               type="email"
               id="userEmail"
               placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full border-2 rounded bg-gray-100 p-2 focus:outline-none focus:ring-2 focus:ring-violet-700"
             />
           </div>
@@ -54,12 +84,16 @@ function SignIn() {
               type="password"
               id="userPassword"
               placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               className="w-full border-2 rounded bg-gray-100 p-2 focus:outline-none focus:ring-2 focus:ring-violet-700"
             />
           </div>
 
           {/* Sign In Button */}
-          <button className="w-full bg-violet-700 rounded py-2 text-white text-lg font-semibold hover:bg-violet-800">
+          <button 
+            type="submit"
+            className="w-full bg-violet-700 rounded py-2 text-white text-lg font-semibold hover:bg-violet-800">
             Sign In
           </button>
 
