@@ -4,6 +4,7 @@ import ApplianceCard from "../components/ApplianceCard";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 import { getAppliances } from "../utils/api";
+import AddNewAppliance from "../components/AddNewAppliance";
 
 function HomePage() {
   const navigate = useNavigate();
@@ -70,26 +71,32 @@ function HomePage() {
   }
 
   return (
-    <div>
-      <div className="mx-4">
+    <div className="flex flex-col min-h-screen bg-gray-50">
+      <div className="flex-grow mx-4">
         <Navbar name={userName}/>
-        <p className="pl-4 text-xl font-bold">your appliances</p>
-        <div className="mt-10 ml-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-8">
-          {appliances.map((appliance) => (
-            <ApplianceCard
-              key={appliance.id}
-              id={appliance.id}
-              applianceName={appliance.name}
-              applianceImg={`data:${appliance.productImage.contentType};base64,${appliance.productImage.data}`}
-              companyName=""
-            />
-          ))}        
-        </div>
-        <div className="flex justify-center mt-8 mb-10">
-          <button onClick={handleClick} className="bg-violet-700 text-white py-2 px-6 rounded-lg shadow-lg">
-            load more...
-          </button>
-        </div>
+        <p className="text-2xl font-semibold my-8">your appliances</p>
+        {appliances.length === 0 ? (
+          <AddNewAppliance />
+        ) : (
+          <>
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {appliances.map((appliance) => (
+                <ApplianceCard
+                  key={appliance.id}
+                  id={appliance.id}
+                  applianceName={appliance.name}
+                  applianceImg={`data:${appliance.productImage.contentType};base64,${appliance.productImage.data}`}
+                  companyName=""
+                />
+              ))}        
+            </div>
+            <div className="flex justify-center mt-8 mb-10">
+              <button onClick={handleClick} className="bg-violet-700 text-white py-2 px-6 rounded-lg shadow-lg hover:bg-violet-800">
+                load more...
+              </button>
+            </div>
+          </>
+        )}
       </div>
       <Footer />
     </div>

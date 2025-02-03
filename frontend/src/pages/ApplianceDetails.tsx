@@ -13,8 +13,8 @@ type ApplianceProps = {
     contentType: string;
   };
   receipts: Array<{
+    _id: string;
     name: string;
-    file: string;
   }>;
 };
 
@@ -64,6 +64,15 @@ function ApplianceDetails() {
   };
 
   const { name: applianceName, purchaseDate, modelNumber, productImage: image, receipts } = appliance;
+  
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
 
   return (
     <div className="mx-6 my-8">
@@ -99,7 +108,7 @@ function ApplianceDetails() {
           <p className="text-5xl mt-36 font-semibold">{applianceName}</p>
           <div className="flex mt-8 my-2 text-xl">
             <p className="text-gray-700 mr-1">purchase date -</p>
-            <p>{purchaseDate}</p>
+            <p>{formatDate(purchaseDate)}</p>
           </div>
           <div className="flex mb-8 mt-2 text-xl">
             <p className="text-gray-700 mr-1">model number -</p>
@@ -110,14 +119,14 @@ function ApplianceDetails() {
             <Receipt
               key={index}
               name={receipt.name}
-              receiptId={receipt.file}
+              receiptId={receipt._id}
               applianceId={appliance._id}
             />
           ))}
           <div className="flex space-x-4 mt-8">
             <button
               onClick={() => navigate("/add-receipt", {
-                state: { productName: applianceName }
+                state: { productId: appliance._id, productName: applianceName }
               })}
               className="bg-neutral-950 px-4 py-4 text-xl rounded-lg text-white"
             >
