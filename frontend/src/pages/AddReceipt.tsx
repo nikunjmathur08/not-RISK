@@ -38,8 +38,11 @@ function AddReceipt() {
     }
   
     try {
-      const response = await fetch(`http://localhost:3000/api/appliance/${productId}/receipt`, {
+      const response = await fetch(`http://localhost:3000/api/v1/appliance/${productId}/receipt`, {
         method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
         body: formData,
       });
   

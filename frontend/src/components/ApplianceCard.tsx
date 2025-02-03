@@ -16,7 +16,7 @@ function ApplianceCard({ id, companyName, applianceName, applianceImg }: Applian
         <img 
           src={applianceImg || ''} 
           alt={applianceName} 
-          className='h-32 w-32 sm:h-40 sm:w-40 md:h-48 md:w-48 object-cover rounded-lg'
+          className='h-32 w-32 sm:h-40 sm:w-40 md:h-48 md:w-48 object-contain rounded-lg'
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.onerror = null;

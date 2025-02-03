@@ -6,7 +6,7 @@ function Navbar({ name } : { name: string }) {
 
   return (
     <nav className="my-6 flex justify-between">
-      <div className="font-bold text-xl pl-4">
+      <div className="font-bold text-3xl pl-4">
         <p>!RISK</p>
       </div>
       <div onClick={() => navigate("/profile")} className="pr-4">
