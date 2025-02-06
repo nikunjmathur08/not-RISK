@@ -103,7 +103,7 @@ function ApplianceDetails() {
         <p className="font-semibold text-xl">appliance details</p>
       </div>
       <div className="grid grid-cols-2">
-        <img src={`data:${image.contentType};base64,${image.data}`} className="h-96 w-96 mx-44 my-20 object-cover" alt={applianceName}></img>
+        <img src={`data:${image.contentType};base64,${image.data}`} className="h-96 w-96 mx-44 my-20 object-contain" alt={applianceName}></img>
         <div>
           <p className="text-5xl mt-36 font-semibold">{applianceName}</p>
           <div className="flex mt-8 my-2 text-xl">
