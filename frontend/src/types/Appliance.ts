@@ -1,6 +1,6 @@
-export type ApplianceCardProps = {
+export interface ApplianceCardProps {
   id: string;
-  companyName: string;
+  companyName: string | null;
   applianceName: string;
   applianceImg: string;
-};
+}

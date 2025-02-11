@@ -9,7 +9,7 @@ import AddNewAppliance from "../components/AddNewAppliance";
 function HomePage() {
   const navigate = useNavigate();
   const [userName, setUserName] = useState("");
-  const [appliances, setAppliances] = useState<Array<{ id: string; name: string; productImage: { data: string; contentType: string } }>>([]); 
+  const [appliances, setAppliances] = useState<Array<{ id: string; name: string; companyName: string | null; productImage: { data: string; contentType: string } }>>([]); 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -86,7 +86,7 @@ function HomePage() {
                   id={appliance.id}
                   applianceName={appliance.name}
                   applianceImg={`data:${appliance.productImage.contentType};base64,${appliance.productImage.data}`}
-                  companyName=""
+                  companyName={appliance.companyName || ""}
                 />
               ))}        
             </div>

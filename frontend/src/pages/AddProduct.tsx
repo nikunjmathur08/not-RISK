@@ -10,6 +10,7 @@ function AddProduct() {
   const [productName, setProductName] = useState("");
   const [fileName, setFileName] = useState("choose file");
   const [modelNumber, setModelNumber] = useState("");
+  const [companyName, setCompanyName] = useState("");
   const [productImage, setProductImage] = useState<File | null>(null);
   const [originalReceipt, setOriginalReceipt] = useState<File | null>(null);
   const [originalReceiptName, setOriginalReceiptName] = useState("choose file");
@@ -64,10 +65,11 @@ function AddProduct() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!productName || !modelNumber || !selectedYear || !selectedMonth || !selectedDate || !productImage || !originalReceipt || !originalReceiptType) {
+    if (!productName || !modelNumber || !selectedYear || !selectedMonth || !selectedDate || !productImage || !originalReceipt || !originalReceiptType || !companyName) {
       console.error('Validation failed:', { 
         productName: !productName,
         modelNumber: !modelNumber,
+        companyName: !companyName,
         date: !selectedYear || !selectedMonth || !selectedDate,
         productImage: !productImage,
         originalReceipt: !originalReceipt,
@@ -80,6 +82,7 @@ function AddProduct() {
     const formData = new FormData();
     formData.append('name', productName);
     formData.append('modelNumber', modelNumber);
+    formData.append('companyName', companyName);
     const monthIndex = months.indexOf(selectedMonth) + 1;
     const formattedDate = `${selectedYear}-${monthIndex.toString().padStart(2, '0')}-${selectedDate.toString().padStart(2, '0')}`;
     formData.append('purchaseDate', formattedDate);
@@ -177,6 +180,26 @@ function AddProduct() {
               value={productName}
               onChange={(e) => setProductName(e.target.value)}
               className="mt-3 w-full border-2 rounded bg-gray-100 p-2 focus:outline-none focus:ring-2 focus:ring-violet-700"
+            />
+          </div>
+
+          {/* Company Name */}
+          <div>
+            <label
+              htmlFor="companyName"
+              className="block text-sm font-medium"
+            >
+              company name
+            </label>
+            <input
+              type="text"
+              id="companyName"
+              name="companyName"
+              placeholder="enter company name"
+              value={companyName}
+              onChange={(e) => setCompanyName(e.target.value)}
+              className="mt-3 w-full border-2 rounded bg-gray-100 p-2 focus:outline-none focus:ring-2 focus:ring-violet-700"
+              required
             />
           </div>
 

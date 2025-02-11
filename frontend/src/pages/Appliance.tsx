@@ -2,14 +2,13 @@ import ApplianceCard from "../components/ApplianceCard";
 import SearchBox from "../components/SearchBox";
 import Sidebar from "../components/Sidebar";
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { getAppliances } from "../utils/api";
 import AddNewAppliance from "../components/AddNewAppliance";
 
 function Appliance() {
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [appliances, setAppliances] = useState<Array<{ id: string; name: string; productImage: { data: string; contentType: string } }>>([]);
+  const [appliances, setAppliances] = useState<Array<{ id: string; name: string; companyName: string | null; productImage: { data: string; contentType: string } }>>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || "");
@@ -60,7 +59,7 @@ function Appliance() {
                   id={appliance.id}
                   applianceName={appliance.name}
                   applianceImg={`data:${appliance.productImage.contentType};base64,${appliance.productImage.data}`}
-                  companyName=""
+                  companyName={appliance.companyName || ""}
                 />
               ))}            
             </div>

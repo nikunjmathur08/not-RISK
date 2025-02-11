@@ -5,7 +5,6 @@ import App from './App.tsx'
 import { ReactLenis } from '@studio-freight/react-lenis'
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
     <ReactLenis
       root
       className='overflow-x-hidden w-screen'
@@ -19,5 +18,4 @@ createRoot(document.getElementById('root')!).render(
     >
     <App />
     </ReactLenis>
-  </StrictMode>,
 )

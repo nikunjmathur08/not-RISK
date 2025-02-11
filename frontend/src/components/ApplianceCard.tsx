@@ -11,20 +11,19 @@ function ApplianceCard({ id, companyName, applianceName, applianceImg }: Applian
   }
   return (
     <div onClick={handleClick} className='bg-slate-50 drop-shadow-xl rounded-lg flex flex-col h-full p-4 border border-slate-200 cursor-pointer'>
-      <p className='text-violet-700 text-left'>{companyName.toUpperCase()}</p>
+      <p className='text-violet-700 text-left sm:text-center'>{companyName ? companyName.toUpperCase() : ''}</p>
       <div className="flex-1 flex items-center justify-center py-4">
         <img 
-          src={applianceImg || ''} 
+          src={applianceImg || 'https://via.placeholder.com/150'} 
           alt={applianceName} 
-          className='h-32 w-32 sm:h-40 sm:w-40 md:h-48 md:w-48 object-contain rounded-lg'
+          className='h-40 w-40 sm:h-44 sm:w-44 md:h-48 md:w-48 object-contain rounded-lg'
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.onerror = null;
-            target.src = 'https://via.placeholder.com/150';
           }}
         />
       </div>
-      <p className='text-left'>{applianceName}</p>
+      <p className='text-center text-lg sm:text-xl'>{applianceName}</p>
     </div>
   );
 }
