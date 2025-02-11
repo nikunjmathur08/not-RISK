@@ -2,6 +2,7 @@ const express = require("express");
 const multer = require("multer");
 const { Appliance } = require("../db");
 const { authMiddleware } = require("../authMiddleware");
+const { compressBuffer, decompressBuffer } = require("../utils/compression");
 const zod = require("zod");
 const jwt = require("jsonwebtoken");
 
@@ -22,6 +23,7 @@ const upload = multer({
 
 const applianceSchema = zod.object({
   name: zod.string().min(1, "Name is required"),
+  companyName: zod.string().nullable().optional(),
   modelNumber: zod.string().min(1, "Model number is required"),
   purchaseDate: zod.string().refine((date) => !isNaN(Date.parse(date)), {
     message: "Invalid date format"
@@ -77,17 +79,19 @@ router.post("/add", authMiddleware, upload.fields([
     }
 
     const productImage = req.files["productImage"][0];
+    const compressedProductImage = await compressBuffer(productImage.buffer);
     const productImageData = {
-      data: productImage.buffer.toString('base64'),
+      data: compressedProductImage.toString('base64'),
       contentType: productImage.mimetype,
       fileName: productImage.originalname,
       fileSize: productImage.size
     };
 
     const originalReceipt = req.files["originalReceipt"][0];
+    const compressedOriginalReceipt = await compressBuffer(originalReceipt.buffer);
     const originalReceiptData = {
       name: req.body.originalReceiptType || "Original Receipt",
-      data: originalReceipt.buffer.toString('base64'),
+      data: compressedOriginalReceipt.toString('base64'),
       contentType: originalReceipt.mimetype,
       fileName: originalReceipt.originalname,
       fileSize: originalReceipt.size
@@ -96,9 +100,10 @@ router.post("/add", authMiddleware, upload.fields([
     let insuranceReceiptData;
     if (req.files["insuranceReceipt"]) {
       const insuranceReceipt = req.files["insuranceReceipt"][0];
+      const compressedInsuranceReceipt = await compressBuffer(insuranceReceipt.buffer);
       insuranceReceiptData = {
         name: req.body.insuranceReceiptType || "Insurance Receipt",
-        data: insuranceReceipt.buffer.toString('base64'),
+        data: compressedInsuranceReceipt.toString('base64'),
         contentType: insuranceReceipt.mimetype,
         fileName: insuranceReceipt.originalname,
         fileSize: insuranceReceipt.size
@@ -109,6 +114,7 @@ router.post("/add", authMiddleware, upload.fields([
       userId: req.userId,
       name: data.name,
       modelNumber: data.modelNumber,
+      companyName: data.companyName,
       purchaseDate: new Date(data.purchaseDate),
       productImage: productImageData,
       receipts: [
@@ -143,18 +149,39 @@ router.get("/get", authMiddleware, async (req, res) => {
     }]
   })
 
+  const decompressedAppliances = await Promise.all(appliances.map(async appliance => {
+    try {
+      const decompressedImageData = Buffer.from(appliance.productImage.data, 'base64');
+      const decompressedImage = await decompressBuffer(decompressedImageData);
+      return {
+        name: appliance.name,
+        id: appliance._id,
+        companyName: appliance.companyName,
+        productImage: {
+          ...appliance.productImage,
+          data: decompressedImage.toString('base64')
+        }
+      };
+    } catch (error) {
+      console.error(`Error processing image for appliance ${appliance._id}:`, error);
+      // Return the appliance with the original image data if decompression fails
+      return {
+        name: appliance.name,
+        id: appliance._id,
+        companyName: appliance.companyName,
+        productImage: appliance.productImage
+      };
+    }
+  }));
+
   res.json({
-    appliance: appliances.map(appliance => ({
-      name: appliance.name,
-      id: appliance._id,
-      productImage: appliance.productImage
-    }))
+    appliance: decompressedAppliances
   })
 })
 
 router.put("/:id", authMiddleware, async (req, res) => {
   try {
-    const { success, data } = applianceSchema.safeParse(req.body);
+    const { success, data, error } = applianceSchema.safeParse(req.body);
     if (!success) {
       return res.status(400).json({
         message: "Invalid input data",
@@ -166,8 +193,9 @@ router.put("/:id", authMiddleware, async (req, res) => {
       req.params.id,
       {
         ...data,
+        companyName: data.companyName || null
       },
-      { new: true }
+      { new: true, runValidators: true }
     );
 
     if (!updatedAppliance) {
@@ -198,13 +226,20 @@ router.get("/:id", authMiddleware, async (req, res) => {
       });
     }
 
+    const decompressedImageData = Buffer.from(appliance.productImage.data, 'base64');
+    const decompressedImage = await decompressBuffer(decompressedImageData);
+
     res.json({
       appliance: {
         _id: appliance._id,
         name: appliance.name,
         modelNumber: appliance.modelNumber,
         purchaseDate: appliance.purchaseDate,
-        productImage: appliance.productImage,
+        companyName: appliance.companyName || null,
+        productImage: {
+          ...appliance.productImage,
+          data: decompressedImage.toString('base64')
+        },
         receipts: appliance.receipts
       }
     });
@@ -317,8 +352,9 @@ router.get("/:id/receipt/:receiptId", async (req, res) => {
 
     res.setHeader('Content-Type', receipt.contentType);
     res.setHeader('Content-Disposition', `inline; filename="${receipt.fileName || 'receipt'}"`); 
-    const buffer = Buffer.from(receipt.data, 'base64');
-    res.send(buffer);
+    const compressedBuffer = Buffer.from(receipt.data, 'base64');
+    const decompressedBuffer = await decompressBuffer(compressedBuffer);
+    res.send(decompressedBuffer);
   } catch (error) {
     console.error('Error fetching receipt:', error);
     res.status(500).json({

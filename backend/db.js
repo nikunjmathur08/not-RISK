@@ -61,6 +61,11 @@ const applianceSchema = new mongoose.Schema({
     require: true,
     trim: true
   },
+  companyName: {
+    type: String,
+    trim: true,
+    default: null
+  },
   modelNumber: {
     type: String,
     require: true,
