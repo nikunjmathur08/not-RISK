@@ -38,7 +38,8 @@ function AddReceipt() {
     }
   
     try {
-      const response = await fetch(`http://localhost:3000/api/v1/appliance/${productId}/receipt`, {
+      const apiUrl = import.meta.env.VITE_API_URL;
+      const response = await fetch(`${apiUrl}/api/v1/appliance/${productId}/receipt`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`

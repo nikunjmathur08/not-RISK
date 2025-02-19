@@ -16,7 +16,8 @@ function HomePage() {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/v1/user', {
+        const apiUrl = import.meta.env.VITE_API_URL;
+        const response = await fetch(`${apiUrl}/api/v1/user`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }

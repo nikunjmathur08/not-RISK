@@ -1,7 +1,6 @@
 
 import './App.css'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
-import Sidebar from './components/Sidebar'
 import AddProduct from './pages/AddProduct'
 import AddReceipt from './pages/AddReceipt'
 import Appliance from './pages/Appliance'

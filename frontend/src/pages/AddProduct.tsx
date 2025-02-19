@@ -116,7 +116,7 @@ function AddProduct() {
         formData.append('insuranceReceiptType', insuranceReceiptType);
       }
 
-      const { appliance } = await addAppliance(formData);
+      await addAppliance(formData);
       navigate('/appliances');
     } catch (error) {
       console.error('Error details:', error);

@@ -1,6 +1,4 @@
 
-import React from 'react';
-
 type ReceiptProps = {
   name: string;
   receiptId: string;
@@ -10,7 +8,8 @@ type ReceiptProps = {
 function Receipt({ name, receiptId, applianceId }: ReceiptProps) {
   const handleClick = () => {
     const token = localStorage.getItem('token');
-    window.open(`http://localhost:3000/api/v1/appliance/${applianceId}/receipt/${receiptId}?token=${token}`, '_blank');
+    const apiUrl = import.meta.env.VITE_API_URL;
+    window.open(`${apiUrl}/api/v1/appliance/${applianceId}/receipt/${receiptId}?token=${token}`, '_blank');
   };
 
   return (

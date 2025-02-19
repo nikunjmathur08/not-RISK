@@ -31,7 +31,7 @@ function SignIn() {
   const onGoogleSuccess = async (credentialResponse: any) => {
     try {
       // Call the utility function to handle authentication
-      const data = await handleGoogleSuccess(credentialResponse);
+      await handleGoogleSuccess(credentialResponse);
 
       // Navigate to home after successful authentication
       navigate("/home");

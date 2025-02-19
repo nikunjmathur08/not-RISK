@@ -1,5 +1,3 @@
-import { jwtDecode } from 'jwt-decode';
-
 export interface GoogleUser {
   email: string;
   name: string;
@@ -14,7 +12,8 @@ export interface SignUpData {
 
 export const handleSignIn = async (email: string, password: string) => {
   try {
-    const response = await fetch('http://localhost:3000/api/v1/user/signin', {
+    const apiUrl = import.meta.env.VITE_API_URL;
+    const response = await fetch(`${apiUrl}/api/v1/user/signin`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -41,7 +40,8 @@ export const handleSignIn = async (email: string, password: string) => {
 
 export const handleGoogleSuccess = async (credentialResponse: { credential: string }) => {
   try{
-    const response = await fetch('http://localhost:3000/api/v1/user/google', {
+    const apiUrl = import.meta.env.VITE_API_URL;
+    const response = await fetch(`${apiUrl}/api/v1/user/google`, {
       method: "POST",
       headers: {
         'Content-Type': 'application/json',
@@ -72,7 +72,8 @@ export const handleSignUp = async (signUpData: SignUpData) => {
       throw new Error('All fields are required');
     }
 
-    const response = await fetch('http://localhost:3000/api/v1/user/signup', {
+    const apiUrl = import.meta.env.VITE_API_URL;
+    const response = await fetch(`${apiUrl}/api/v1/user/signup`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
