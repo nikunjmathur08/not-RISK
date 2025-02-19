@@ -1,6 +1,6 @@
 import axios, { InternalAxiosRequestConfig } from 'axios';
 
-const BASE_URL = 'https://not-risk-backend.onrender.com';
+const BASE_URL = 'https://not-risk-backend.onrender.com/api/v1';
 
 const api = axios.create({
   baseURL: BASE_URL,
