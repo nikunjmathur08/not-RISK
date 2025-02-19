@@ -117,7 +117,7 @@ a revolutionary service that simplifies your life by effortlessly managing recei
 
 3. create a .env file based on .env.example and configure your environment variables:
    ```
-   VITE_API_URL=http://localhost:3000/api/v1
+   VITE_API_URL=${apiUrl}/api/v1
    ```
 
 4. start the development server:
