@@ -35,14 +35,6 @@ function AddProduct() {
   const years = Array.from({ length: 25 }, (_, i) => new Date().getFullYear() - i);
   const dates = Array.from({ length: 31 }, (_, i) => i + 1);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files ? event.target.files[0] : null;
-    if (file) {
-      setProductImage(file);
-      setFileName(file.name);
-    }
-  };
-
   const handleReceiptChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files ? event.target.files[0] : null;
     if (file) {

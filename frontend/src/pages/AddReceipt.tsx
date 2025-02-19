@@ -7,7 +7,7 @@ function AddReceipt() {
   const [receiptName, setReceiptName] = useState("");
   const [fileName, setFileName] = useState<string | null>(null);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
-  const { productId, productName } = location.state || {};
+  const { productId } = location.state || {};
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] || null;
