@@ -40,25 +40,19 @@ function SignUp () {
   };
 
   return (
-    <div className="flex h-screen">
-      {/* Left Section */}
+    <div className="flex h-screen flex-col md:flex-row relative">
+      {/* Mobile Background Image */}
       <div
-        className="w-5/12 bg-cover bg-center relative"
+        className="absolute inset-0 md:hidden bg-cover bg-center"
         style={{ backgroundImage: "url(/temp/Mac.jpg)" }}
       >
-        <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-center items-center text-white px-10">
-          <h2 className="text-3xl font-semibold mb-4 text-center">effortless tracking, always <br/> at your fingertips</h2>
-          <p className="text-center mb-6">
-            share your details to track your invoices and <br/> warranty status effortlessly.
-          </p>
-          <button onClick={() => navigate("/signin")} className="bg-transparent border border-white rounded px-10 py-2 text-white text-lg hover:bg-white hover:text-black">
-            sign in
-          </button>
-        </div>
+        <div className="absolute inset-0 bg-black bg-opacity-70"></div>
       </div>
-      <div className="w-7/12 flex flex-col justify-center items-center bg-gray-50 px-20">
-        <p className="font-bold text-3xl mb-16">!RISK</p>
-        <p className="text-2xl font-semibold mb-10">sign up to !RISK</p>
+
+      {/* Right Section - Form */}
+      <div className="w-full md:w-7/12 flex flex-col justify-center items-center min-h-screen md:min-h-0 bg-gray-50 md:bg-gray-50 bg-transparent px-4 md:px-20 py-8 md:py-0 relative z-10">
+        <p className="font-bold text-2xl md:text-3xl mb-8 md:mb-16 text-white md:text-black">!RISK</p>
+        <p className="text-xl md:text-2xl font-semibold mb-6 md:mb-10 text-white md:text-black">sign up to !RISK</p>
 
         {error && (
           <div className="w-full p-3 mb-4 text-red-500 bg-red-100 rounded">
@@ -66,10 +60,10 @@ function SignUp () {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="w-full space-y-6">
+        <form onSubmit={handleSubmit} className="w-full space-y-4 md:space-y-6">
           {/* Email Input */}
           <div>
-            <label htmlFor="userEmail" className="block text-sm font-medium mb-2">
+            <label htmlFor="userEmail" className="block text-sm font-medium mb-2 text-white md:text-black">
               your email
             </label>
             <input
@@ -83,7 +77,7 @@ function SignUp () {
           </div>
 
           <div>
-            <label htmlFor="name" className="block text-sm font-medium mb-2">
+            <label htmlFor="name" className="block text-sm font-medium mb-2 text-white md:text-black">
               your name
             </label>
             <input
@@ -99,7 +93,7 @@ function SignUp () {
           {/* Password Input */}
           <div>
             <div className="flex justify-between items-center mb-2">
-              <label htmlFor="userPassword" className="text-sm font-medium">
+              <label htmlFor="userPassword" className="text-sm font-medium text-white md:text-black">
                 password
               </label>
             </div>
@@ -123,16 +117,37 @@ function SignUp () {
           <p className="text-center text-sm text-gray-500 mt-4">or</p>
 
           {/* Google Sign Up Button */}
-          <div className="w-full">
+          <div className="w-full flex justify-center items-center">
             <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
               <GoogleLogin
                 onSuccess={onGoogleSuccess}
                 onError={() => setError('Google sign up failed. Please try again.')}
                 useOneTap
+                type="standard"
+                theme="outline"
+                size="large"
+                text="continue_with"
+                shape="rectangular"
+                width="300"
               />
             </GoogleOAuthProvider>
           </div>
         </form>
+      </div>
+      {/* Left Section - Image (Desktop only) */}
+      <div
+        className="hidden md:block md:w-5/12 h-1/3 md:h-full bg-cover bg-center relative"
+        style={{ backgroundImage: "url(/temp/Mac.jpg)" }}
+      >
+        <div className="absolute inset-0 bg-black bg-opacity-70 flex flex-col justify-center items-center text-white px-4 md:px-10">
+          <h2 className="text-2xl md:text-3xl font-semibold mb-4 text-center">effortless tracking, always <br/> at your fingertips</h2>
+          <p className="text-center mb-6 text-sm md:text-base">
+            share your details to track your invoices and <br/> warranty status effortlessly.
+          </p>
+          <button onClick={() => navigate("/")} className="bg-transparent border border-white rounded px-6 md:px-10 py-2 text-white text-base md:text-lg hover:bg-white hover:text-black">
+            sign in
+          </button>
+        </div>
       </div>
     </div>
   );
