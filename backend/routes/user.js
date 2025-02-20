@@ -10,7 +10,18 @@ const bcrypt = require('bcrypt');
 const multer = require("multer");
 
 const signUpBody = zod.object({
-  username: zod.string().email(),
+  username: zod.string().email().refine(
+    (email) => {
+      // Check for common email providers and valid domain structure
+      const validDomainPattern = /^[^@]+@[^@]+\.[a-zA-Z]{2,}$/;
+      const commonEmailProviders = /@(gmail\.com|yahoo\.com|outlook\.com|hotmail\.com|icloud\.com)$/i;
+      const disposableEmailPattern = /@(tempmail\.com|throwawaymail\.com|temp-mail\.org)$/i;
+      
+      return validDomainPattern.test(email) && 
+             (commonEmailProviders.test(email) || !disposableEmailPattern.test(email));
+    },
+    { message: "Please provide a valid email address from a recognized email provider" }
+  ),
   firstName: zod.string(),
   lastName: zod.string(),
   password: zod.string()
@@ -148,7 +159,17 @@ router.post("/signup", async (req, res) => {
 })
 
 const signinBody = zod.object({
-  username: zod.string().email(),
+  username: zod.string().email().refine(
+    (email) => {
+      const validDomainPattern = /^[^@]+@[^@]+\.[a-zA-Z]{2,}$/;
+      const commonEmailProviders = /@(gmail\.com|yahoo\.com|outlook\.com|hotmail\.com|icloud\.com)$/i;
+      const disposableEmailPattern = /@(tempmail\.com|throwawaymail\.com|temp-mail\.org)$/i;
+      
+      return validDomainPattern.test(email) && 
+             (commonEmailProviders.test(email) || !disposableEmailPattern.test(email));
+    },
+    { message: "Please provide a valid email address from a recognized email provider" }
+  ),
   password: zod.string()
 })
 
