@@ -145,7 +145,7 @@ function SignIn() {
       >
         <div className="absolute inset-0 bg-black bg-opacity-70 flex flex-col justify-center items-center text-white px-10">
           <h2 className="text-3xl font-semibold mb-4 text-center">
-            fffortless tracking, always <br /> at your fingertips
+            effortless tracking, always <br /> at your fingertips
           </h2>
           <p className="text-center mb-6">
             share your details to track your invoices and <br /> warranty status effortlessly.
