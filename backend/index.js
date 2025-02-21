@@ -32,6 +32,16 @@ app.use((req, res, next) => {
   next();
 });
 
+const mainRouter = require("./routes/index");
+
+app.get("/testing", (req, res) => {
+  return res.status(200).json({
+    message: "Working successfully!"
+  });
+});
+
+app.use("/api/v1", mainRouter);
+
 app.use((err, req, res, next) => {
   console.error('Error details:', err);
   res.status(500).json({ 
@@ -39,16 +49,6 @@ app.use((err, req, res, next) => {
     error: process.env.NODE_ENV === 'development' ? err : {}
   });
 });
-
-const mainRouter = require("./routes/index");
-
-app.get("/testing", (req, res) => {
-  return res.status(200).json({
-    message: "Working successfully!"
-  });
-})
-
-app.use("/api/v1", mainRouter);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
