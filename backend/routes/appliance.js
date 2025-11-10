@@ -1,10 +1,11 @@
 const express = require("express");
 const multer = require("multer");
-const { Appliance } = require("../db");
+const { db, supabase } = require("../db");
 const { authMiddleware } = require("../authMiddleware");
 const { compressBuffer, decompressBuffer } = require("../utils/compression");
 const zod = require("zod");
 const jwt = require("jsonwebtoken");
+const { JWT_SECRET } = require("../config");
 
 const router = express.Router();
 
@@ -44,7 +45,6 @@ router.post("/add", authMiddleware, upload.fields([
       });
     }
 
-    // Improved date parsing and validation
     let purchaseDate;
     try {
       purchaseDate = new Date(`${req.body.purchaseDate}`);
@@ -82,9 +82,9 @@ router.post("/add", authMiddleware, upload.fields([
     const compressedProductImage = await compressBuffer(productImage.buffer);
     const productImageData = {
       data: compressedProductImage.toString('base64'),
-      contentType: productImage.mimetype,
-      fileName: productImage.originalname,
-      fileSize: productImage.size
+      content_type: productImage.mimetype,
+      file_name: productImage.originalname,
+      file_size: productImage.size
     };
 
     const originalReceipt = req.files["originalReceipt"][0];
@@ -92,9 +92,9 @@ router.post("/add", authMiddleware, upload.fields([
     const originalReceiptData = {
       name: req.body.originalReceiptType || "Original Receipt",
       data: compressedOriginalReceipt.toString('base64'),
-      contentType: originalReceipt.mimetype,
-      fileName: originalReceipt.originalname,
-      fileSize: originalReceipt.size
+      content_type: originalReceipt.mimetype,
+      file_name: originalReceipt.originalname,
+      file_size: originalReceipt.size
     };
 
     let insuranceReceiptData;
@@ -104,28 +104,55 @@ router.post("/add", authMiddleware, upload.fields([
       insuranceReceiptData = {
         name: req.body.insuranceReceiptType || "Insurance Receipt",
         data: compressedInsuranceReceipt.toString('base64'),
-        contentType: insuranceReceipt.mimetype,
-        fileName: insuranceReceipt.originalname,
-        fileSize: insuranceReceipt.size
+        content_type: insuranceReceipt.mimetype,
+        file_name: insuranceReceipt.originalname,
+        file_size: insuranceReceipt.size
       };
     }
 
-    const appliance = await Appliance.create({
-      userId: req.userId,
+    const appliance = await db.appliances.create({
+      user_id: req.userId,
       name: data.name,
-      modelNumber: data.modelNumber,
-      companyName: data.companyName,
-      purchaseDate: new Date(data.purchaseDate),
-      productImage: productImageData,
-      receipts: [
-        originalReceiptData,
-        ...(insuranceReceiptData ? [insuranceReceiptData] : [])
-      ]
+      model_number: data.modelNumber,
+      company_name: data.companyName,
+      purchase_date: purchaseDate.toISOString(),
+      product_image_data: productImageData.data,
+      product_image_content_type: productImageData.content_type,
+      product_image_file_name: productImageData.file_name,
+      product_image_file_size: productImageData.file_size
     });
+
+    // Create receipts
+    await db.receipts.create({
+      appliance_id: appliance.id,
+      name: originalReceiptData.name,
+      data: originalReceiptData.data,
+      content_type: originalReceiptData.content_type,
+      file_name: originalReceiptData.file_name,
+      file_size: originalReceiptData.file_size
+    });
+
+    if (insuranceReceiptData) {
+      await db.receipts.create({
+        appliance_id: appliance.id,
+        name: insuranceReceiptData.name,
+        data: insuranceReceiptData.data,
+        content_type: insuranceReceiptData.content_type,
+        file_name: insuranceReceiptData.file_name,
+        file_size: insuranceReceiptData.file_size
+      });
+    }
+
+    // Fetch appliance with receipts
+    const applianceWithReceipts = await db.appliances.findById(appliance.id);
+    const receipts = await db.receipts.findByApplianceId(appliance.id);
 
     res.json({
       message: "Appliance added successfully!",
-      appliance,
+      appliance: {
+        ...applianceWithReceipts,
+        receipts: receipts
+      }
     });
   } catch (error) {
     console.error('Error in add appliance route:', error);
@@ -137,46 +164,76 @@ router.post("/add", authMiddleware, upload.fields([
 });
 
 router.get("/get", authMiddleware, async (req, res) => {
-  const filter = req.query.filter || "";
+  try {
+    console.log('Fetching appliances for userId:', req.userId, 'Type:', typeof req.userId);
+    const filter = req.query.filter || "";
 
-  const appliances = await Appliance.find({
-    userId: req.userId,
-    $or: [{
-      name: {
-        "$regex": filter,
-        "$options": "i"
-      }
-    }]
-  })
-
-  const decompressedAppliances = await Promise.all(appliances.map(async appliance => {
-    try {
-      const decompressedImageData = Buffer.from(appliance.productImage.data, 'base64');
-      const decompressedImage = await decompressBuffer(decompressedImageData);
-      return {
-        name: appliance.name,
-        id: appliance._id,
-        companyName: appliance.companyName,
-        productImage: {
-          ...appliance.productImage,
-          data: decompressedImage.toString('base64')
+    const appliances = await db.appliances.find({
+      userId: req.userId,
+      $or: filter ? [{
+        name: {
+          "$regex": filter,
+          "$options": "i"
         }
-      };
-    } catch (error) {
-      console.error(`Error processing image for appliance ${appliance._id}:`, error);
-      // Return the appliance with the original image data if decompression fails
-      return {
-        name: appliance.name,
-        id: appliance._id,
-        companyName: appliance.companyName,
-        productImage: appliance.productImage
-      };
-    }
-  }));
+      }] : []
+    })
 
-  res.json({
-    appliance: decompressedAppliances
-  })
+    // Ensure appliances is always an array
+    const appliancesArray = Array.isArray(appliances) ? appliances : [];
+
+    const decompressedAppliances = await Promise.all(
+      appliancesArray.map(async appliance => {
+        try {
+          // Safety check for required fields
+          if (!appliance || !appliance.product_image_data) {
+            console.error('Invalid appliance data:', appliance);
+            return null;
+          }
+
+          const decompressedImageData = Buffer.from(appliance.product_image_data, 'base64');
+          const decompressedImage = await decompressBuffer(decompressedImageData);
+          return {
+            name: appliance.name,
+            id: appliance.id,
+            companyName: appliance.company_name,
+            productImage: {
+              data: decompressedImage.toString('base64'),
+              contentType: appliance.product_image_content_type,
+              fileName: appliance.product_image_file_name,
+              fileSize: appliance.product_image_file_size
+            }
+          };
+        } catch (error) {
+          console.error(`Error processing image for appliance ${appliance?.id}:`, error);
+          // Return the appliance with the original image data if decompression fails
+          return {
+            name: appliance.name,
+            id: appliance.id,
+            companyName: appliance.company_name,
+            productImage: {
+              data: appliance.product_image_data,
+              contentType: appliance.product_image_content_type,
+              fileName: appliance.product_image_file_name,
+              fileSize: appliance.product_image_file_size
+            }
+          };
+        }
+      })
+    );
+
+    // Filter out any null values
+    const validAppliances = decompressedAppliances.filter(app => app !== null);
+
+    res.json({
+      appliance: validAppliances
+    })
+  } catch (error) {
+    console.error('Error in get appliances route:', error);
+    res.status(500).json({
+      message: "Error fetching appliances",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
 })
 
 router.put("/:id", authMiddleware, async (req, res) => {
@@ -189,13 +246,16 @@ router.put("/:id", authMiddleware, async (req, res) => {
       });
     }
 
-    const updatedAppliance = await Appliance.findByIdAndUpdate(
+    const updateData = {
+      name: data.name,
+      model_number: data.modelNumber,
+      company_name: data.companyName || null,
+      purchase_date: new Date(data.purchaseDate).toISOString()
+    };
+
+    const updatedAppliance = await db.appliances.findByIdAndUpdate(
       req.params.id,
-      {
-        ...data,
-        companyName: data.companyName || null
-      },
-      { new: true, runValidators: true }
+      updateData
     );
 
     if (!updatedAppliance) {
@@ -210,7 +270,7 @@ router.put("/:id", authMiddleware, async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({
-      message: "Error fetching appliance",
+      message: "Error updating appliance",
       error: error.message,
     });
   }
@@ -218,7 +278,7 @@ router.put("/:id", authMiddleware, async (req, res) => {
 
 router.get("/:id", authMiddleware, async (req, res) => {
   try {
-    const appliance = await Appliance.findById(req.params.id);
+    const appliance = await db.appliances.findById(req.params.id);
 
     if (!appliance) {
       return res.status(404).json({
@@ -226,21 +286,40 @@ router.get("/:id", authMiddleware, async (req, res) => {
       });
     }
 
-    const decompressedImageData = Buffer.from(appliance.productImage.data, 'base64');
+    // Verify ownership
+    if (appliance.user_id !== req.userId) {
+      return res.status(403).json({
+        message: "Unauthorized"
+      });
+    }
+
+    const decompressedImageData = Buffer.from(appliance.product_image_data, 'base64');
     const decompressedImage = await decompressBuffer(decompressedImageData);
+
+    const receipts = await db.receipts.findByApplianceId(appliance.id);
 
     res.json({
       appliance: {
-        _id: appliance._id,
+        _id: appliance.id,
         name: appliance.name,
-        modelNumber: appliance.modelNumber,
-        purchaseDate: appliance.purchaseDate,
-        companyName: appliance.companyName || null,
+        modelNumber: appliance.model_number,
+        purchaseDate: appliance.purchase_date,
+        companyName: appliance.company_name || null,
         productImage: {
-          ...appliance.productImage,
-          data: decompressedImage.toString('base64')
+          data: decompressedImage.toString('base64'),
+          contentType: appliance.product_image_content_type,
+          fileName: appliance.product_image_file_name,
+          fileSize: appliance.product_image_file_size
         },
-        receipts: appliance.receipts
+        receipts: receipts.map(r => ({
+          _id: r.id,
+          name: r.name,
+          data: r.data,
+          contentType: r.content_type,
+          fileName: r.file_name,
+          fileSize: r.file_size,
+          createdAt: r.created_at
+        }))
       }
     });
   } catch (error) {
@@ -253,23 +332,50 @@ router.get("/:id", authMiddleware, async (req, res) => {
 
 router.delete("/:id", authMiddleware, async (req, res) => {
   try {
-    const appliance = await Appliance.findOne({
+    console.log('Deleting appliance:', req.params.id, 'for user:', req.userId);
+    
+    const appliance = await db.appliances.findOne({
       _id: req.params.id,
       userId: req.userId
     });
 
     if (!appliance) {
+      console.log('Appliance not found or unauthorized');
       return res.status(404).json({
         message: "Appliance not found or unauthorized"
       });
     }
 
-    await Appliance.findByIdAndDelete(req.params.id);
+    console.log('Found appliance, deleting receipts...');
+    
+    // Delete receipts first using Supabase directly
+    const receipts = await db.receipts.findByApplianceId(req.params.id);
+    console.log('Found receipts:', receipts?.length || 0);
+    
+    if (receipts && receipts.length > 0) {
+      const { error: receiptsError } = await supabase
+        .from('receipts')
+        .delete()
+        .eq('appliance_id', req.params.id);
+      
+      if (receiptsError) {
+        console.error('Error deleting receipts:', receiptsError);
+        // Continue with appliance deletion even if receipt deletion fails
+      } else {
+        console.log('Receipts deleted successfully');
+      }
+    }
+
+    console.log('Deleting appliance...');
+    await db.appliances.findByIdAndDelete(req.params.id);
+    console.log('Appliance deleted successfully');
 
     res.json({
       message: "Appliance deleted successfully"
     });
   } catch (error) {
+    console.error('Error in delete appliance route:', error);
+    console.error('Error stack:', error.stack);
     res.status(500).json({
       message: "Error deleting appliance",
       error: process.env.NODE_ENV === 'development' ? error.message : undefined
@@ -279,7 +385,7 @@ router.delete("/:id", authMiddleware, async (req, res) => {
 
 router.put("/:id/receipt", authMiddleware, upload.single("originalReceipt"), async (req, res) => {
   try {
-    const appliance = await Appliance.findOne({
+    const appliance = await db.appliances.findOne({
       _id: req.params.id,
       userId: req.userId
     });
@@ -297,19 +403,25 @@ router.put("/:id/receipt", authMiddleware, upload.single("originalReceipt"), asy
     }
 
     const receiptData = {
+      appliance_id: appliance.id,
       name: req.body.name || "Additional Receipt",
       data: req.file.buffer.toString('base64'),
-      contentType: req.file.mimetype,
-      fileName: req.file.originalname,
-      fileSize: req.file.size
+      content_type: req.file.mimetype,
+      file_name: req.file.originalname,
+      file_size: req.file.size
     };
 
-    appliance.receipts.push(receiptData);
-    await appliance.save();
+    await db.receipts.create(receiptData);
+
+    const updatedAppliance = await db.appliances.findById(appliance.id);
+    const receipts = await db.receipts.findByApplianceId(appliance.id);
 
     res.json({
       message: "Receipt added successfully",
-      appliance
+      appliance: {
+        ...updatedAppliance,
+        receipts: receipts
+      }
     });
   } catch (error) {
     console.error('Error adding receipt:', error);
@@ -327,11 +439,10 @@ router.get("/:id/receipt/:receiptId", async (req, res) => {
       return res.status(401).json({ message: "No token provided" });
     }
 
-    // Verify the token and get userId
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET);
     const userId = decoded.userId;
 
-    const appliance = await Appliance.findOne({
+    const appliance = await db.appliances.findOne({
       _id: req.params.id,
       userId: userId
     });
@@ -342,16 +453,16 @@ router.get("/:id/receipt/:receiptId", async (req, res) => {
       });
     }
 
-    const receipt = appliance.receipts.find(r => r._id.toString() === req.params.receiptId);
+    const receipt = await db.receipts.findById(req.params.receiptId);
 
-    if (!receipt) {
+    if (!receipt || receipt.appliance_id !== appliance.id) {
       return res.status(404).json({
         message: "Receipt not found"
       });
     }
 
-    res.setHeader('Content-Type', receipt.contentType);
-    res.setHeader('Content-Disposition', `inline; filename="${receipt.fileName || 'receipt'}"`); 
+    res.setHeader('Content-Type', receipt.content_type);
+    res.setHeader('Content-Disposition', `inline; filename="${receipt.file_name || 'receipt'}"`); 
     const compressedBuffer = Buffer.from(receipt.data, 'base64');
     const decompressedBuffer = await decompressBuffer(compressedBuffer);
     res.send(decompressedBuffer);

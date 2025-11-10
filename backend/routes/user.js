@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const zod = require("zod");
-const { User, Account } = require("../db");
+const { db } = require("../db");
 const jwt = require("jsonwebtoken");
 const { JWT_SECRET } = require("../config");
 const { authMiddleware } = require("../authMiddleware");
@@ -12,7 +12,6 @@ const multer = require("multer");
 const signUpBody = zod.object({
   username: zod.string().email().refine(
     (email) => {
-      // Check for common email providers and valid domain structure
       const validDomainPattern = /^[^@]+@[^@]+\.[a-zA-Z]{2,}$/;
       const commonEmailProviders = /@(gmail\.com|yahoo\.com|outlook\.com|hotmail\.com|icloud\.com)$/i;
       const disposableEmailPattern = /@(tempmail\.com|throwawaymail\.com|temp-mail\.org)$/i;
@@ -69,21 +68,21 @@ router.post("/google", async (req, res) => {
 
     const { email, name, given_name, family_name } = payload;
 
-    let user = await User.findOne({ username: email });
+    let user = await db.users.findOne({ username: email });
 
     if (!user) {
-      user = await User.create({
+      user = await db.users.create({
         username: email,
-        firstName: given_name || name.split(' ')[0],
-        lastName: family_name || name.split(' ')[1] || '',
+        first_name: given_name || name.split(' ')[0],
+        last_name: family_name || name.split(' ')[1] || '',
         password: await bcrypt.hash(Math.random().toString(36).slice(-8), 10),
       });
 
-      await Account.create({ userId: user._id });
+      await db.accounts.create({ user_id: user.id });
     }
 
     const token = jwt.sign(
-      { userId: user._id, email: user.username, name: user.firstName + ' ' + user.lastName },
+      { userId: user.id, email: user.username, name: user.first_name + ' ' + user.last_name },
       JWT_SECRET,
       { expiresIn: '7d'}
     );
@@ -115,7 +114,7 @@ router.post("/signup", async (req, res) => {
     })
   }
 
-  const existingUser = await User.findOne({
+  const existingUser = await db.users.findOne({
     username: req.body.username
   })
 
@@ -126,17 +125,17 @@ router.post("/signup", async (req, res) => {
   }
 
   try {
-    const user = await User.create({
+    const user = await db.users.create({
       username: req.body.username,
-      firstName: req.body.firstName,
-      lastName: req.body.lastName,
+      first_name: req.body.firstName,
+      last_name: req.body.lastName,
       password: await bcrypt.hash(req.body.password, 10)
     })
 
-    const userId = user._id;
+    const userId = user.id;
 
-    await Account.create({
-      userId,
+    await db.accounts.create({
+      user_id: userId,
     })
 
     const token = jwt.sign({
@@ -179,11 +178,10 @@ router.post("/signin", async (req, res) => {
   if (!success) {
     return res.status(400).json({
       message: "Email already taken/Incorrect inputs.",
-      errors: error.errors,
     })
   }
 
-  const user = await User.findOne({
+  const user = await db.users.findOne({
     username: req.body.username
   });
 
@@ -202,7 +200,7 @@ router.post("/signin", async (req, res) => {
   }
 
   const token = jwt.sign({
-    userId: user._id
+    userId: user.id
   }, JWT_SECRET);
 
   res.json({
@@ -218,7 +216,7 @@ const updateBody = zod.object({
 
 router.get("/", authMiddleware, async (req, res) => {
   try {
-    const user = await User.findById(req.userId);
+    const user = await db.users.findById(req.userId);
     if (!user) {
       return res.status(404).json({
         message: "User not found"
@@ -227,8 +225,8 @@ router.get("/", authMiddleware, async (req, res) => {
 
     res.json({
       user: {
-        firstName: user.firstName,
-        lastName: user.lastName,
+        firstName: user.first_name,
+        lastName: user.last_name,
         username: user.username
       }
     });
@@ -250,28 +248,31 @@ router.put("/", authMiddleware, async (req, res) => {
       });
     }
 
-    const user = await User.findById(req.userId);
+    const user = await db.users.findById(req.userId);
     if (!user) {
       return res.status(404).json({
         message: "User not found"
       });
     }
 
+    const updateData = {};
     if (data.password) {
-      data.password = await bcrypt.hash(data.password, 10);
+      updateData.password = await bcrypt.hash(data.password, 10);
+    }
+    if (data.firstName) {
+      updateData.first_name = data.firstName;
+    }
+    if (data.lastName) {
+      updateData.last_name = data.lastName;
     }
 
-    const updatedUser = await User.findByIdAndUpdate(
-      req.userId,
-      { $set: data },
-      { new: true }
-    );
+    const updatedUser = await db.users.findByIdAndUpdate(req.userId, updateData);
 
     res.json({
       message: "Profile updated successfully",
       user: {
-        firstName: updatedUser.firstName,
-        lastName: updatedUser.lastName,
+        firstName: updatedUser.first_name,
+        lastName: updatedUser.last_name,
         username: updatedUser.username
       }
     });

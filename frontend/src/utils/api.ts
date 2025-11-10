@@ -1,6 +1,9 @@
 import axios, { InternalAxiosRequestConfig } from 'axios';
 
-const BASE_URL = 'https://not-risk-backend.onrender.com/api/v1';
+// Use environment variable with fallback to deployed URL
+const BASE_URL = import.meta.env.VITE_API_URL 
+  ? `${import.meta.env.VITE_API_URL}/api/v1`
+  : 'https://not-risk-backend.onrender.com/api/v1';
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -17,6 +20,15 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   }
   return config;
 });
+
+// Add response interceptor for better error handling
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.error('API Error:', error.response?.data || error.message);
+    return Promise.reject(error);
+  }
+);
 
 export const getAppliances = async (filter = '') => {
   const response = await api.get(`/appliance/get?filter=${filter}`);

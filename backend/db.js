@@ -1,137 +1,199 @@
-const express = require("express");
-require('dotenv').config();
-const mongoose = require("mongoose");
+const { createClient } = require('@supabase/supabase-js')
+const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = require('./config')
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-const userSchema = new mongoose.Schema({
-  firstName: {
-    type: String,
-    require: true,
-    trim: true
+const db = {
+  users: {
+    async findOne(query) {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .match(query)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') throw error;
+      return data;
+    },
+
+    async findById(id) {
+      const { data, error} = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') throw error;
+      return data;
+    },
+
+    async create(userData) {
+      const { data, error } = await supabase
+        .from('users')
+        .insert(userData)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+
+    async findByIdAndUpdate(id, updateData) {
+      const { data, error } = await supabase
+        .from('users')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    }
   },
-  lastName: {
-    type: String,
-    require: true,
-    trim: true,
-    maxLength: 50
+
+  accounts: {
+    async create(accountData) {
+      const { data, error } = await supabase
+        .from('accounts')
+        .insert(accountData)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    }
   },
-  username: {
-    type: String,
-    require: true,
-    unique: true,
-    trim: true,
-    lowercase: true,
-    minLength: 3,
-    maxLength: 30
+
+  appliances: {
+    async create(applianceData) {
+      const { data, error } = await supabase
+        .from('appliances')
+        .insert(applianceData)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+
+    async find(query) {
+      try {
+        let queryBuilder = supabase
+          .from('appliances')
+          .select('*');
+        
+        if (query.userId) {
+          queryBuilder = queryBuilder.eq('user_id', query.userId);
+        }
+
+        // Handle filter/search
+        if (query.$or && query.$or.length > 0 && query.$or[0] && query.$or[0].name) {
+          const filter = query.$or[0].name.$regex;
+          if (filter) {
+            queryBuilder = queryBuilder.ilike('name', `%${filter}%`);
+          }
+        }
+
+        const { data, error } = await queryBuilder;
+        if (error) {
+          console.error('Supabase query error:', error);
+          throw error;
+        }
+        // Ensure we always return an array
+        return Array.isArray(data) ? data : [];
+      } catch (error) {
+        console.error('Error in appliances.find:', error);
+        // Return empty array on error to prevent crashes
+        return [];
+      }
+    },
+
+    async findById(id) {
+      const { data, error } = await supabase
+        .from('appliances')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
+      return data;
+    },
+
+    async findOne(query) {
+      let queryBuilder = supabase
+        .from('appliances')
+        .select('*');
+
+      if (query._id) {
+        queryBuilder = queryBuilder.eq('id', query._id);
+      }
+
+      if (query.userId) {
+        queryBuilder = queryBuilder.eq('user_id', query.userId);
+      }
+
+      const { data, error } = await queryBuilder.single();
+
+      if (error && error.code !== 'PGRST116') throw error;
+      return data;
+    },
+
+    async findByIdAndUpdate(id, updateData) {
+      const { data, error } = await supabase
+        .from('appliances')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+
+    async findByIdAndDelete(id) {
+      const { error } = await supabase
+        .from('appliances')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      return { success: true };
+    }
   },
-  password: {
-    type: String,
-    require: true,
-    minLength: 6
+
+  receipts: {
+    async create(receiptData) {
+      const { data, error } = await supabase
+        .from('receipts')
+        .insert(receiptData)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+
+    async findByApplianceId(applianceId) {
+      const { data, error } = await supabase
+        .from('receipts')
+        .select('*')
+        .eq('appliance_id', applianceId)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      return data || [];
+    },
+
+    async findById(id) {
+      const { data, error } = await supabase
+        .from('receipts')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
+      return data;
+    }
   }
-});
+}
 
-const accountSchema = new mongoose.Schema({
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-});
-
-const applianceSchema = new mongoose.Schema({
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    require: true
-  },
-  name: {
-    type: String,
-    require: true,
-    trim: true
-  },
-  companyName: {
-    type: String,
-    trim: true,
-    default: null
-  },
-  modelNumber: {
-    type: String,
-    require: true,
-    trim: true
-  },
-  purchaseDate: {
-    type: Date,
-    require: true
-  },
-  productImage: {
-    data: {
-      type: String,
-      required: true
-    },
-    contentType: {
-      type: String,
-      required: true
-    },
-    fileName: {
-      type: String,
-      required: true
-    },
-    fileSize: {
-      type: Number,
-      required: true,
-      max: 5 * 1024 * 1024 // 5MB limit
-    }
-  },
-  receipts: [{
-    name: {
-      type: String,
-      required: true,
-      trim: true
-    },
-    data: {
-      type: String,
-      required: true
-    },
-    contentType: {
-      type: String,
-      required: true
-    },
-    fileName: {
-      type: String,
-      required: true
-    },
-    fileSize: {
-      type: Number,
-      required: true,
-      max: 5 * 1024 * 1024 // 5MB limit
-    },
-    createdAt: {
-      type: Date,
-      default: Date.now
-    }
-  }],
-});
-
-const User = mongoose.model("User", userSchema);
-const Account = mongoose.model("Account", accountSchema);
-const Appliance = mongoose.model("Appliance", applianceSchema);
-
-// Create a promise-based connection
-const connectDB = async () => {
-  try {
-    const mongoURI = process.env.MONGO_URI;
-    if (!mongoURI) {
-      throw new Error('MongoDB connection string is not defined in environment variables');
-    }
-    await mongoose.connect(mongoURI);
-    console.log('Successfully connected to MongoDB Atlas');
-  } catch (error) {
-    console.error('MongoDB connection error:', error);
-    process.exit(1);
-  }
-};
-
-// Connect to MongoDB
-connectDB();
-
-module.exports = { User, Account, Appliance, connectDB };
+module.exports = {db, supabase};
